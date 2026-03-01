@@ -1,0 +1,175 @@
+---
+title: "Basic Usage"
+description: "Learn how to convert GitHub repositories to PDF documents"
+---
+
+## Converting Remote Repositories
+
+The primary use case for repo2pdf is converting remote GitHub repositories into well-formatted PDF documents. When you run the tool, it guides you through an interactive configuration process.
+
+### Quick Start
+
+Simply run the command to start the interactive setup:
+
+```bash
+repo2pdf
+```
+
+You'll be greeted with the repo2pdf banner and a series of prompts:
+
+```bash
+  ██████╗ ███████╗██████╗  ██████╗         ██████╗         ██████╗ ██████╗ ███████╗
+  ██╔══██╗██╔════╝██╔══██╗██╔═══██╗        ╚════██╗        ██╔══██╗██╔══██╗██╔════╝
+  ██████╔╝█████╗  ██████╔╝██║   ██║         █████╔╝        ██████╔╝██║  ██║█████╗
+  ██╔══██╗██╔══╝  ██╔═══╝ ██║   ██║        ██╔═══╝         ██╔═══╝ ██║  ██║██╔══╝
+  ██║  ██║███████╗██║     ╚██████╔╝        ███████╗        ██║     ██████╔╝██║
+  ╚═╝  ╚═╝╚══════╝╚═╝      ╚═════╝         ╚══════╝        ╚═╝     ╚═════╝ ╚═╝
+
+  Welcome to Repo-to-PDF! Let's get started...
+```
+
+## Step-by-Step Process
+
+<Steps>
+  <Step title="Choose Repository Type">
+    When asked "Do you want to use a local repository?", select **No** to clone a remote GitHub repository.
+    
+    ```bash
+    ? Do you want to use a local repository? (Use arrow keys)
+    ❯ No
+      Yes
+    ```
+  </Step>
+
+  <Step title="Provide GitHub URL">
+    Enter a valid GitHub repository URL in the format `https://github.com/owner/repo`.
+    
+    ```bash
+    ? Please provide a GitHub repository URL: https://github.com/username/my-project
+    ```
+    
+    <Note>
+      The URL must match the pattern `https://github.com/[owner]/[repo]` - other Git hosting services are not currently supported.
+    </Note>
+  </Step>
+
+  <Step title="Select Features">
+    Choose which features to include in your PDF using the spacebar to select/deselect:
+    
+    ```bash
+    ? Select the features you want to include: (Press <space> to select, <a> to toggle all)
+    ❯ ◯ Add line numbers
+      ◯ Add highlighting
+      ◯ Add page numbers
+      ◯ Remove comments
+      ◯ Remove empty lines
+      ◯ One PDF per file
+    ```
+    
+    See [Configuration](/usage/configuration) for detailed feature descriptions.
+  </Step>
+
+  <Step title="Set Output Name">
+    Specify the output filename for your PDF:
+    
+    ```bash
+    ? Please provide an output file name: (output.pdf)
+    ```
+    
+    <Note>
+      This prompt only appears when **One PDF per file** is not selected. The default is `output.pdf`.
+    </Note>
+  </Step>
+
+  <Step title="Keep or Delete Repository">
+    Decide whether to keep the cloned repository after PDF generation:
+    
+    ```bash
+    ? Do you want to keep the cloned repository? (Use arrow keys)
+    ❯ No
+      Yes
+    ```
+    
+    The repository is cloned to a temporary directory called `tempRepo` by default.
+  </Step>
+</Steps>
+
+## Processing Output
+
+Once configured, repo2pdf will:
+
+1. Clone the repository to a temporary directory
+2. Process all files according to your selected features
+3. Generate the PDF(s)
+4. Optionally clean up the temporary repository
+
+```bash
+✔ Setting everything up
+✔ Repository cloned successfully
+✔ Processing files... (47 processed)
+✔ PDF created with 47 files processed.
+✔ Temporary repository has been deleted.
+```
+
+## What Gets Included
+
+By default, repo2pdf includes all text-based files in your repository while automatically excluding:
+
+### Excluded Files
+- `.gitignore`, `.gitmodules`
+- `package-lock.json`, `yarn.lock`
+- `.git` directory
+- `.vscode`, `.idea`, `.vs` (IDE directories)
+- `node_modules`
+- `repo2pdf.ignore`
+
+### Excluded Extensions
+- Image files: `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.bmp`, `.webp`, `.ico`
+- Video files: `.mp4`, `.mov`, `.avi`, `.wmv`
+- YAML files: `.yml`
+- PDF files: `.pdf`
+
+<Note>
+  You can customize these exclusions using a `repo2pdf.ignore` file. See [Configuration](/usage/configuration#custom-exclusions) for more details.
+</Note>
+
+## Binary Files
+
+Binary files that aren't excluded will be included in the PDF as base64-encoded strings:
+
+```
+path/to/binary-file.bin
+
+BASE64:
+
+QmluYXJ5IGNvbnRlbnQgZW5jb2RlZCBpbiBiYXNlNjQ=
+```
+
+## Repository Validation
+
+The GitHub URL must be a valid repository URL. The tool validates:
+
+- Protocol must be `https://`
+- Domain must be `github.com`
+- Path must follow the pattern `/owner/repo`
+
+<Warning>
+  Private repositories require authentication. Ensure you have Git credentials configured on your system or use a [local repository](/usage/local-repositories) approach.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Local Repositories" icon="folder-open" href="/usage/local-repositories">
+    Use local repositories instead of cloning
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/usage/configuration">
+    Explore all available features and options
+  </Card>
+  <Card title="Output Options" icon="file-pdf" href="/usage/output-options">
+    Learn about different PDF output modes
+  </Card>
+  <Card title="Installation" icon="download" href="/installation">
+    Installation requirements and setup
+  </Card>
+</CardGroup>

@@ -1,0 +1,399 @@
+---
+title: 'Code Formatting'
+description: 'Automatically format code with Prettier before generating PDFs'
+icon: 'wand-magic-sparkles'
+---
+
+## Overview
+
+repo2pdf integrates [Prettier](https://prettier.io/) to automatically format code before adding it to your PDF. This ensures consistent, readable code regardless of the original formatting.
+
+<Note>
+Code formatting is **always enabled** in repo2pdf. There's no option to disable it - all supported files are automatically formatted.
+</Note>
+
+## How It Works
+
+The formatting process:
+
+1. **Detects file extension** (e.g., `.js`, `.ts`, `.css`)
+2. **Maps to Prettier parser** using the parser configuration
+3. **Formats the code** with Prettier defaults
+4. **Falls back to plain text** if formatting fails
+5. **Continues to syntax highlighting** with formatted code
+
+From `clone.ts:236-248`:
+
+```typescript
+let data = await fsPromises.readFile(filePath, "utf8");
+// Determine parser and format with Prettier if supported
+const extension = path.extname(filePath).slice(1);
+const parser = getPrettierParser(extension);
+
+if (parser) {
+  try {
+    data = await prettier.format(data, { parser });
+  } catch (error: unknown) {
+    const errorMessage = (error as Error).message.split("\n")[0];
+    console.warn(
+      `Plain text fallback at ${filePath}: ${errorMessage}`,
+    );
+  }
+}
+```
+
+## Supported Languages
+
+repo2pdf maps file extensions to Prettier parsers:
+
+From `clone.ts:28-56`:
+
+```typescript
+function getPrettierParser(extension: string): string | null {
+  const parserOptions: { [key: string]: string } = {
+    js: "babel",
+    jsx: "babel",
+    ts: "typescript",
+    tsx: "typescript",
+    css: "css",
+    scss: "scss",
+    less: "less",
+    html: "html",
+    json: "json",
+    md: "markdown",
+    yaml: "yaml",
+    graphql: "graphql",
+    vue: "vue",
+    angular: "angular",
+    xml: "xml",
+    java: "java",
+    kotlin: "kotlin",
+    swift: "swift",
+    php: "php",
+    ruby: "ruby",
+    python: "python",
+    perl: "perl",
+    shell: "sh",
+    dockerfile: "dockerfile",
+    ini: "ini",
+  };
+  return parserOptions[extension] || null;
+}
+```
+
+<CardGroup cols={3}>
+  <Card title="JavaScript/TypeScript" icon="js">
+    - `.js` → babel
+    - `.jsx` → babel
+    - `.ts` → typescript
+    - `.tsx` → typescript
+  </Card>
+  <Card title="Web Styles" icon="css3">
+    - `.css` → css
+    - `.scss` → scss
+    - `.less` → less
+  </Card>
+  <Card title="Markup" icon="code">
+    - `.html` → html
+    - `.xml` → xml
+    - `.vue` → vue
+  </Card>
+  <Card title="Data Formats" icon="database">
+    - `.json` → json
+    - `.yaml` → yaml
+    - `.ini` → ini
+  </Card>
+  <Card title="Backend Languages" icon="server">
+    - `.java` → java
+    - `.kotlin` → kotlin
+    - `.swift` → swift
+    - `.php` → php
+    - `.ruby` → ruby
+    - `.python` → python
+  </Card>
+  <Card title="Other" icon="file-code">
+    - `.md` → markdown
+    - `.graphql` → graphql
+    - `.sh` → shell
+    - `Dockerfile` → dockerfile
+    - `.perl` → perl
+  </Card>
+</CardGroup>
+
+## Graceful Fallback
+
+If Prettier cannot format a file (due to syntax errors or unsupported features), repo2pdf:
+
+1. **Logs a warning** with the error message
+2. **Uses the original content** without formatting
+3. **Continues processing** normally
+
+```typescript
+catch (error: unknown) {
+  const errorMessage = (error as Error).message.split("\n")[0];
+  console.warn(
+    `Plain text fallback at ${filePath}: ${errorMessage}`,
+  );
+}
+```
+
+<Warning>
+Files with syntax errors will not be formatted and will appear in the PDF exactly as written.
+</Warning>
+
+## Before and After Examples
+
+<Accordion title="JavaScript Example">
+
+**Before formatting:**
+```javascript
+function test(){const x=1;if(x>0){return"positive";}else{return"negative";}}
+```
+
+**After Prettier formatting:**
+```javascript
+function test() {
+  const x = 1;
+  if (x > 0) {
+    return "positive";
+  } else {
+    return "negative";
+  }
+}
+```
+
+</Accordion>
+
+<Accordion title="TypeScript Example">
+
+**Before formatting:**
+```typescript
+type User={name:string,age:number};const users:User[]=[{name:"Alice",age:30},{name:"Bob",age:25}];
+```
+
+**After Prettier formatting:**
+```typescript
+type User = { name: string; age: number };
+const users: User[] = [
+  { name: "Alice", age: 30 },
+  { name: "Bob", age: 25 },
+];
+```
+
+</Accordion>
+
+<Accordion title="JSON Example">
+
+**Before formatting:**
+```json
+{"name":"repo2pdf","version":"1.0.0","dependencies":{"prettier":"^3.0.0"}}
+```
+
+**After Prettier formatting:**
+```json
+{
+  "name": "repo2pdf",
+  "version": "1.0.0",
+  "dependencies": {
+    "prettier": "^3.0.0"
+  }
+}
+```
+
+</Accordion>
+
+<Accordion title="CSS Example">
+
+**Before formatting:**
+```css
+.container{display:flex;justify-content:center;align-items:center;background-color:#fff;}
+```
+
+**After Prettier formatting:**
+```css
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+}
+```
+
+</Accordion>
+
+## Prettier Configuration
+
+repo2pdf uses Prettier's **default settings** with only the parser specified:
+
+```typescript
+data = await prettier.format(data, { parser });
+```
+
+This means:
+- **Print Width**: 80 characters
+- **Tab Width**: 2 spaces
+- **Semicolons**: Enabled
+- **Single Quotes**: False (uses double quotes)
+- **Trailing Commas**: "all" (in ES5)
+
+<Tip>
+If you want different formatting in your PDF, format your files before running repo2pdf.
+</Tip>
+
+## Processing Order
+
+The complete processing pipeline:
+
+```mermaid
+graph LR
+    A[Read File] --> B[Format with Prettier]
+    B --> C[Replace Tabs]
+    C --> D[Normalize Line Endings]
+    D --> E[Remove Comments?]
+    E --> F[Remove Empty Lines?]
+    F --> G[Syntax Highlighting]
+    G --> H[Add to PDF]
+```
+
+From `clone.ts:234-278`:
+
+1. Read file content
+2. **Format with Prettier** (if parser available)
+3. Replace tabs with 4 spaces
+4. Normalize line endings
+5. Remove comments (if enabled)
+6. Remove empty lines (if enabled)
+7. Apply syntax highlighting
+8. Add to PDF
+
+## Unsupported File Types
+
+If no parser is found, the file is processed without formatting:
+
+```typescript
+return parserOptions[extension] || null;
+```
+
+Examples of unsupported extensions:
+- `.go` (Go)
+- `.rs` (Rust)
+- `.c`, `.cpp` (C/C++)
+- `.lua` (Lua)
+- `.r` (R)
+
+<Note>
+Unsupported files are still included in the PDF - they just aren't formatted by Prettier.
+</Note>
+
+## Tab Replacement
+
+After formatting, tabs are replaced with spaces:
+
+```typescript
+data = data.replace(/\t/g, "    "); // 4 spaces
+```
+
+This ensures consistent indentation in the monospace PDF font.
+
+## Line Ending Normalization
+
+All line endings are normalized to Unix-style (`\n`):
+
+```typescript
+data = data.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+```
+
+This prevents issues with:
+- Windows line endings (`\r\n`)
+- Old Mac line endings (`\r`)
+
+## Benefits of Auto-Formatting
+
+<CardGroup cols={2}>
+  <Card title="Consistency" icon="equals">
+    All code follows the same style, regardless of author preferences
+  </Card>
+  <Card title="Readability" icon="glasses">
+    Properly indented and spaced code is easier to read
+  </Card>
+  <Card title="Professional" icon="award">
+    PDFs look polished and well-maintained
+  </Card>
+  <Card title="Reduced Size" icon="compress">
+    Consistent formatting can reduce PDF file size
+  </Card>
+</CardGroup>
+
+## Interaction with Other Features
+
+<Accordion title="Formatting + Line Numbers">
+
+Line numbers are added **after** formatting:
+
+```javascript
+// Unformatted: function test(){return true;}
+
+// PDF output:
+1 function test() {
+2   return true;
+3 }
+```
+
+Line numbers reflect the formatted code, not the original.
+
+</Accordion>
+
+<Accordion title="Formatting + Syntax Highlighting">
+
+Syntax highlighting is applied **after** formatting:
+
+1. Format with Prettier → clean structure
+2. Highlight with highlight.js → add colors
+
+This ensures the cleanest, most readable output.
+
+</Accordion>
+
+<Accordion title="Formatting + Comment Removal">
+
+If you enable comment removal, comments are removed **after** formatting:
+
+```javascript
+// 1. Format
+function test() {
+  // Comment
+  return true;
+}
+
+// 2. Remove comments
+function test() {
+  return true;
+}
+```
+
+</Accordion>
+
+## Error Handling
+
+When Prettier fails:
+
+```bash
+Plain text fallback at src/broken.js: Unexpected token (1:5)
+```
+
+The file is still processed, just without formatting.
+
+<Tip>
+Check the console output for any formatting warnings to identify files with syntax errors.
+</Tip>
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Syntax Highlighting" icon="palette" href="/features/syntax-highlighting">
+    Add colors after formatting for maximum readability
+  </Card>
+  <Card title="Line Numbers" icon="list-ol" href="/features/line-numbers">
+    Line numbers match the formatted output
+  </Card>
+</CardGroup>

@@ -1,0 +1,239 @@
+---
+title: "Local Repositories"
+description: "Convert local repositories to PDF without cloning"
+---
+
+## Using Local Repositories
+
+If you already have a repository on your local machine, you can skip the cloning step and process it directly. This is useful for:
+
+- Converting private repositories without authentication
+- Processing repositories you're actively developing
+- Working offline or with limited network access
+- Converting repositories from other Git hosting services
+- Faster processing by avoiding the clone step
+
+## How It Works
+
+When you select the local repository option, repo2pdf processes files directly from the directory you specify instead of cloning from GitHub.
+
+<Steps>
+  <Step title="Select Local Repository">
+    When prompted, choose **Yes** to use a local repository:
+    
+    ```bash
+    ? Do you want to use a local repository? (Use arrow keys)
+      No
+    ❯ Yes
+    ```
+  </Step>
+
+  <Step title="Provide Directory Path">
+    Enter the full absolute path to your local repository:
+    
+    ```bash
+    ? Please provide the full path to the local repository: /home/user/projects/my-app
+    ```
+    
+    <Note>
+      The path must exist on your filesystem. The tool validates the directory exists before proceeding.
+    </Note>
+  </Step>
+
+  <Step title="Configure Features">
+    Select your desired features just like with remote repositories:
+    
+    ```bash
+    ? Select the features you want to include: (Press <space> to select)
+    ❯ ◉ Add line numbers
+      ◉ Add highlighting
+      ◯ Add page numbers
+      ◯ Remove comments
+      ◯ Remove empty lines
+      ◯ One PDF per file
+    ```
+  </Step>
+
+  <Step title="Set Output Options">
+    Specify the output filename or folder name:
+    
+    ```bash
+    ? Please provide an output file name: my-project.pdf
+    ```
+  </Step>
+</Steps>
+
+## Key Differences
+
+### No Cloning Step
+
+With local repositories, the tool skips the Git clone operation:
+
+```bash
+✔ Setting everything up
+✔ Processing files... (47 processed)
+✔ PDF created with 47 files processed.
+```
+
+Notice there's no "Repository cloned successfully" message.
+
+### No Repository Cleanup
+
+Since the tool uses your existing directory, you won't be prompted to keep or delete the repository. Your local files remain untouched.
+
+```bash
+# This prompt only appears for remote repositories
+? Do you want to keep the cloned repository?
+```
+
+## Path Validation
+
+The tool validates that the path you provide exists using Node.js's `fs.existsSync()`:
+
+```typescript
+validate: function (value: string) {
+  if (fs.existsSync(value)) {
+    return true;
+  } else {
+    return "Please enter a valid directory path.";
+  }
+}
+```
+
+If the path doesn't exist, you'll see an error:
+
+```bash
+? Please provide the full path to the local repository: /invalid/path
+>> Please enter a valid directory path.
+```
+
+## Supported Path Formats
+
+<Tabs>
+  <Tab title="Linux/macOS">
+    Use absolute paths starting from root:
+    
+    ```bash
+    /home/username/projects/my-repo
+    /Users/username/Documents/repos/my-project
+    ```
+    
+    Or use the tilde for home directory:
+    
+    ```bash
+    ~/projects/my-repo
+    ~/Documents/repos/my-project
+    ```
+  </Tab>
+  
+  <Tab title="Windows">
+    Use Windows-style paths:
+    
+    ```bash
+    C:\Users\username\projects\my-repo
+    D:\repos\my-project
+    ```
+    
+    Forward slashes also work:
+    
+    ```bash
+    C:/Users/username/projects/my-repo
+    ```
+  </Tab>
+</Tabs>
+
+## Example Workflow
+
+Here's a complete example of converting a local repository:
+
+```bash
+$ repo2pdf
+
+  ██████╗ ███████╗██████╗  ██████╗         ██████╗         ██████╗ ██████╗ ███████╗
+  ██╔══██╗██╔════╝██╔══██╗██╔═══██╗        ╚════██╗        ██╔══██╗██╔══██╗██╔════╝
+  ██████╔╝█████╗  ██████╔╝██║   ██║         █████╔╝        ██████╔╝██║  ██║█████╗
+  ██╔══██╗██╔══╝  ██╔═══╝ ██║   ██║        ██╔═══╝         ██╔═══╝ ██║  ██║██╔══╝
+  ██║  ██║███████╗██║     ╚██████╔╝        ███████╗        ██║     ██████╔╝██║
+  ╚═╝  ╚═╝╚══════╝╚═╝      ╚═════╝         ╚══════╝        ╚═╝     ╚═════╝ ╚═╝
+
+  Welcome to Repo-to-PDF! Let's get started...
+
+✔ Setup complete
+
+? Do you want to use a local repository? Yes
+? Please provide the full path to the local repository: /home/user/my-app
+? Select the features you want to include: Add line numbers, Add highlighting
+? Please provide an output file name: my-app.pdf
+
+Processing your request...
+
+✔ Processing files... (23 processed)
+✔ PDF created with 23 files processed.
+```
+
+## Working with Non-Git Directories
+
+<Note>
+  The directory doesn't need to be a Git repository. Any directory structure works, as the tool processes files based on directory traversal, not Git metadata.
+</Note>
+
+This means you can convert:
+- Git repositories (`.git` directory is automatically excluded)
+- Plain directories with source code
+- Extracted archives
+- Project templates
+
+## File Exclusions Apply
+
+The same exclusion rules apply to local repositories:
+
+- Universal excluded names (`.git`, `node_modules`, etc.)
+- Universal excluded extensions (`.png`, `.jpg`, `.yml`, etc.)
+- Custom exclusions via `repo2pdf.ignore` file
+
+See [Configuration - Custom Exclusions](/usage/configuration#custom-exclusions) for details.
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Private Development" icon="lock">
+    Convert private repositories without setting up Git authentication
+  </Card>
+  <Card title="Non-GitHub Repos" icon="code-branch">
+    Process repositories from GitLab, Bitbucket, or other services
+  </Card>
+  <Card title="Offline Work" icon="wifi-slash">
+    Generate PDFs without internet connectivity
+  </Card>
+  <Card title="Active Development" icon="code">
+    Convert your current working directory with uncommitted changes
+  </Card>
+</CardGroup>
+
+## Performance Benefits
+
+Using local repositories is faster because it skips:
+
+1. Network latency for cloning
+2. Downloading repository data
+3. Temporary directory cleanup
+
+For large repositories, this can save significant time.
+
+<Warning>
+  Ensure you have read permissions for all files in the directory. Permission errors will cause the tool to fail during file processing.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="sliders" href="/usage/configuration">
+    Explore all available features and options
+  </Card>
+  <Card title="Output Options" icon="file-pdf" href="/usage/output-options">
+    Learn about different PDF output modes
+  </Card>
+  <Card title="Basic Usage" icon="rocket" href="/usage/basic-usage">
+    Back to basic remote repository usage
+  </Card>
+</CardGroup>

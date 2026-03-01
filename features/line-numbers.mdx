@@ -1,0 +1,260 @@
+---
+title: 'Line Numbers'
+description: 'Add line numbers to your PDF for easy code reference and navigation'
+icon: 'list-ol'
+---
+
+## Overview
+
+Line numbers make it easy to reference specific lines of code in your PDF documentation. repo2pdf can automatically add line numbers to every line of code in your generated PDFs.
+
+## Enabling Line Numbers
+
+When running repo2pdf, you'll be prompted:
+
+```bash
+repo2pdf
+? Would you like to add line numbers? (Y/n)
+```
+
+Select **Yes** to add line numbers to your PDF.
+
+## How It Works
+
+Line numbers are added during the PDF generation process:
+
+1. **Counts total lines** in each file
+2. **Calculates width** needed for line numbers (handles 1-9999+ lines)
+3. **Prepends line number** to each line with proper padding
+4. **Maintains alignment** across all lines
+
+From `clone.ts:279-294`:
+
+```typescript
+const hlData = htmlToJson(highlightedCode, removeEmptyLines);
+let lineNum = 1;
+const lineNumWidth = hlData
+  .filter((d) => d.text === "\n")
+  .length.toString().length;
+  
+for (let i = 0; i < hlData.length; i++) {
+  const { text, color } = hlData[i];
+  if (i === 0 || hlData[i - 1]?.text === "\n")
+    if (addLineNumbers) {
+      doc.text(
+        String(lineNum++).padStart(lineNumWidth, " ") + " ",
+        {
+          continued: true,
+          textIndent: 0,
+        },
+      );
+    }
+  doc.fillColor(color || "black");
+  // ... rest of rendering
+}
+```
+
+## Dynamic Width Calculation
+
+Line numbers automatically adjust their width based on file size:
+
+<CardGroup cols={3}>
+  <Card title="Short Files">
+    **1-9 lines**
+    
+    Single digit width:
+    ```
+    1 code
+    2 code
+    9 code
+    ```
+  </Card>
+  <Card title="Medium Files">
+    **10-99 lines**
+    
+    Two digit width:
+    ```
+     1 code
+    10 code
+    99 code
+    ```
+  </Card>
+  <Card title="Large Files">
+    **100+ lines**
+    
+    Three+ digit width:
+    ```
+      1 code
+    100 code
+    999 code
+    ```
+  </Card>
+</CardGroup>
+
+<Note>
+The width is calculated by counting newlines and converting to string length, ensuring perfect alignment.
+</Note>
+
+## Visual Examples
+
+### Without Line Numbers
+
+```typescript
+function greet(name: string) {
+  console.log(`Hello, ${name}!`);
+}
+```
+
+### With Line Numbers
+
+```typescript
+1 function greet(name: string) {
+2   console.log(`Hello, ${name}!`);
+3 }
+```
+
+## Combined with Other Features
+
+Line numbers work seamlessly with other repo2pdf features:
+
+<Accordion title="Line Numbers + Syntax Highlighting">
+
+When both features are enabled:
+
+```typescript
+ 1 // Comment in SlateGray
+ 2 function example() {
+ 3   const value = "string in DarkGreen";
+ 4   return 42; // number in OrangeRed
+ 5 }
+```
+
+The line numbers remain in black while syntax elements are colored.
+
+</Accordion>
+
+<Accordion title="Line Numbers + Empty Line Removal">
+
+When removing empty lines, line numbers skip the blank lines:
+
+**Original:**
+```typescript
+function test() {
+
+  return true;
+
+}
+```
+
+**With empty lines removed:**
+```typescript
+1 function test() {
+2   return true;
+3 }
+```
+
+<Warning>
+Be careful: the line numbers won't match the original file when empty lines are removed!
+</Warning>
+
+</Accordion>
+
+<Accordion title="Line Numbers + Code Formatting">
+
+When Prettier formatting is enabled, line numbers reflect the formatted output:
+
+**Original (unformatted):**
+```javascript
+function test(){return"hello";}
+```
+
+**PDF output (formatted with line numbers):**
+```javascript
+1 function test() {
+2   return "hello";
+3 }
+```
+
+Line numbers are added AFTER formatting, so they accurately reflect the PDF content.
+
+</Accordion>
+
+## Padding and Alignment
+
+The `padStart()` method ensures consistent alignment:
+
+```typescript
+String(lineNum++).padStart(lineNumWidth, " ") + " "
+```
+
+This means:
+- Line 1 becomes `"  1 "` in a 3-digit file (100+ lines)
+- Line 10 becomes `" 10 "` in a 3-digit file
+- Line 100 becomes `"100 "` in a 3-digit file
+
+<Tip>
+The extra space after the line number creates visual separation from the code.
+</Tip>
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Code Reviews" icon="code-pull-request">
+    Reference specific lines when reviewing code: "See line 42 in auth.ts"
+  </Card>
+  <Card title="Documentation" icon="book">
+    Point readers to exact locations in your codebase
+  </Card>
+  <Card title="Teaching" icon="graduation-cap">
+    Help students follow along with specific line references
+  </Card>
+  <Card title="Debugging" icon="bug">
+    Match PDF line numbers with error stack traces
+  </Card>
+</CardGroup>
+
+## Performance Considerations
+
+Line number calculation is efficient:
+
+1. **Single pass**: Counts lines while rendering
+2. **Minimal overhead**: Simple string operations
+3. **No re-parsing**: Uses already-processed syntax data
+
+<Note>
+Adding line numbers typically adds less than 5% to processing time.
+</Note>
+
+## Disabling Line Numbers
+
+If you don't need line numbers, simply answer **No** when prompted:
+
+```bash
+? Would you like to add line numbers? No
+```
+
+The PDF will contain code without line number prefixes.
+
+## Font and Styling
+
+Line numbers use the same monospace font (Courier) as the code:
+
+```typescript
+doc
+  .font("Courier")
+  .fontSize(10)
+  .text(`${fileName}\n\nBASE64:\n\n${data}`, { lineGap: 4 });
+```
+
+This ensures consistent alignment and readability.
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Syntax Highlighting" icon="palette" href="/features/syntax-highlighting">
+    Add colors to make code more readable
+  </Card>
+  <Card title="Page Numbers" icon="file" href="/features/page-numbers">
+    Add page numbers to your PDF footer
+  </Card>
+</CardGroup>

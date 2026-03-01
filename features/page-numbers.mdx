@@ -1,0 +1,266 @@
+---
+title: 'Page Numbers'
+description: 'Add page numbers to PDF footers for easy document navigation'
+icon: 'file'
+---
+
+## Overview
+
+Page numbers are added to the footer of each page in your generated PDF, showing the current page and total page count (e.g., "Page: 1 of 42").
+
+## Enabling Page Numbers
+
+When running repo2pdf, you'll be prompted:
+
+```bash
+repo2pdf
+? Would you like to add page numbers? (Y/n)
+```
+
+Select **Yes** to add page numbers to your PDF footer.
+
+## How It Works
+
+Page numbers are added in a two-phase process:
+
+### Phase 1: Buffer All Pages
+
+First, the PDF is generated with buffered pages:
+
+```typescript
+doc = new PDFDocument({
+  bufferPages: true,  // Enable page buffering
+  autoFirstPage: false,
+});
+```
+
+### Phase 2: Add Page Numbers
+
+After all content is rendered, repo2pdf loops through all pages and adds numbers:
+
+From `clone.ts:132-151`:
+
+```typescript
+if (!onePdfPerFile) {
+  if (doc) {
+    doc.text("", { continued: false }); // ensure text flow is closed
+    const pages = doc.bufferedPageRange();
+    
+    for (let i = 0; i < pages.count; i++) {
+      doc.switchToPage(i);
+      if (addPageNumbers) {
+        const oldBottomMargin = doc.page.margins.bottom;
+        doc.page.margins.bottom = 0;
+        doc.text(
+          `Page: ${i + 1} of ${pages.count}`,
+          0,
+          doc.page.height - oldBottomMargin / 2,
+          {
+            align: "center",
+          },
+        );
+        doc.page.margins.bottom = oldBottomMargin;
+      }
+    }
+    doc.end();
+  }
+}
+```
+
+<Note>
+Page numbers are only added when generating a single PDF. When using `--one-pdf-per-file`, page numbers are not added since each file becomes its own PDF.
+</Note>
+
+## Page Number Format
+
+The format is always:
+
+```
+Page: [current] of [total]
+```
+
+Examples:
+- `Page: 1 of 1` (single page)
+- `Page: 1 of 42` (first page of 42)
+- `Page: 42 of 42` (last page)
+
+## Positioning and Alignment
+
+<Steps>
+  <Step title="Center Alignment">
+    Page numbers are centered horizontally on the page:
+    
+    ```typescript
+    {
+      align: "center",
+    }
+    ```
+  </Step>
+  
+  <Step title="Bottom Placement">
+    Positioned at the bottom using the page height and margin:
+    
+    ```typescript
+    doc.page.height - oldBottomMargin / 2
+    ```
+    
+    This places the text in the middle of the bottom margin area.
+  </Step>
+  
+  <Step title="Margin Preservation">
+    Margins are temporarily modified and then restored:
+    
+    ```typescript
+    const oldBottomMargin = doc.page.margins.bottom;
+    doc.page.margins.bottom = 0;
+    // ... add page number ...
+    doc.page.margins.bottom = oldBottomMargin;
+    ```
+  </Step>
+</Steps>
+
+## Visual Example
+
+```
+┌─────────────────────────────────────────┐
+│                                         │
+│  Your code content appears here...      │
+│  function example() {                   │
+│    return true;                         │
+│  }                                      │
+│                                         │
+│                                         │
+│                                         │
+│              Page: 1 of 3               │ ← Centered at bottom
+└─────────────────────────────────────────┘
+```
+
+## Buffered Pages Explained
+
+Page buffering is essential for page numbers because:
+
+<Accordion title="Why Buffering is Required">
+
+1. **Unknown Total**: When generating the PDF, we don't know the total page count until all content is processed
+2. **Need to Revisit**: We need to go back to each page to add "X of TOTAL"
+3. **PDFKit Limitation**: Without buffering, PDFKit streams pages immediately and they can't be modified
+
+```typescript
+bufferPages: true  // Keeps all pages in memory
+```
+
+From the PDFKit documentation:
+> When `bufferPages` is true, pages are kept in memory and can be accessed via `switchToPage()`
+
+</Accordion>
+
+<Accordion title="switchToPage() Method">
+
+The `switchToPage()` method allows navigating back to any page:
+
+```typescript
+for (let i = 0; i < pages.count; i++) {
+  doc.switchToPage(i);  // Go to page i
+  // Add page number to this page
+}
+```
+
+This is why page numbers can be added after all content is rendered.
+
+</Accordion>
+
+## Text Flow Closure
+
+Before adding page numbers, the text flow must be closed:
+
+```typescript
+doc.text("", { continued: false });
+```
+
+<Warning>
+If text flow isn't closed, adding page numbers may interfere with the last text block on the final page.
+</Warning>
+
+## Single PDF vs Multiple PDFs
+
+<CodeGroup>
+
+```bash Single PDF (page numbers added)
+repo2pdf
+? Generate one PDF per file? No
+? Would you like to add page numbers? Yes
+
+# Result: one PDF with page numbers
+# Output: repo.pdf
+#   - Page: 1 of 50
+#   - Page: 2 of 50
+#   - ...
+```
+
+```bash Multiple PDFs (no page numbers)
+repo2pdf
+? Generate one PDF per file? Yes
+? Would you like to add page numbers? Yes
+
+# Result: multiple PDFs without page numbers
+# Output: 
+#   - src_index.ts.pdf (single file, no page numbers)
+#   - src_utils.ts.pdf (single file, no page numbers)
+#   - ...
+```
+
+</CodeGroup>
+
+<Note>
+The `onePdfPerFile` option takes precedence. When enabled, page numbers are not added even if you select "Yes" for page numbers.
+</Note>
+
+## Performance Impact
+
+<CardGroup cols={2}>
+  <Card title="Memory Usage" icon="memory">
+    Buffering pages keeps them in memory instead of streaming to disk. For very large repositories (1000+ files), this can use significant RAM.
+  </Card>
+  <Card title="Processing Time" icon="clock">
+    Adding page numbers requires a second pass through all pages. This typically adds 10-20% to generation time.
+  </Card>
+</CardGroup>
+
+<Tip>
+For extremely large codebases, consider using `--one-pdf-per-file` to avoid memory issues, even though page numbers won't be added.
+</Tip>
+
+## Use Cases
+
+- **Documentation**: "See page 42 for authentication logic"
+- **Printing**: Easy reference when reviewing printed PDFs
+- **Navigation**: Quickly estimate document size and location
+- **Professional Output**: Makes PDFs look more polished and organized
+
+## Disabling Page Numbers
+
+To generate PDFs without page numbers:
+
+```bash
+? Would you like to add page numbers? No
+```
+
+The PDF footer will remain empty.
+
+## Font and Style
+
+Page numbers use the default PDF font with:
+- **Position**: Bottom center
+- **Alignment**: Center
+- **Format**: "Page: X of Y"
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Line Numbers" icon="list-ol" href="/features/line-numbers">
+    Add line numbers to code content
+  </Card>
+  <Card title="Syntax Highlighting" icon="palette" href="/features/syntax-highlighting">
+    Make your code more readable with colors
+  </Card>
+</CardGroup>

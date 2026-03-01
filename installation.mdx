@@ -1,0 +1,196 @@
+---
+title: Installation
+description: Install repo2pdf using NPX or from source
+---
+
+## Prerequisites
+
+Before installing repo2pdf, ensure you have the following installed on your system:
+
+- **Node.js** version 18.0.0 or higher
+- **git** (required only for cloning remote repositories)
+
+<Tip>
+  You can check your Node.js version by running `node --version` in your terminal
+</Tip>
+
+## Installation methods
+
+<Tabs>
+  <Tab title="NPX (recommended)">
+    The fastest way to use repo2pdf is with NPX, which downloads and runs the latest version without requiring installation.
+
+    <Steps>
+      <Step title="Run with NPX">
+        Execute repo2pdf directly using NPX:
+        
+        ```bash
+        npx repo2pdf
+        ```
+        
+        This command automatically downloads the latest version from npm and starts the interactive CLI.
+      </Step>
+
+      <Step title="Follow the prompts">
+        The tool will guide you through the conversion process:
+        
+        - Choose between remote repository or local directory
+        - Select features (line numbers, syntax highlighting, etc.)
+        - Specify output file name
+        - Decide whether to keep the cloned repository
+      </Step>
+    </Steps>
+
+    <Note>
+      Using NPX ensures you always run the latest version without manual updates
+    </Note>
+  </Tab>
+
+  <Tab title="Clone from source">
+    For development or customization, you can clone and build repo2pdf from source.
+
+    <Steps>
+      <Step title="Clone the repository">
+        ```bash
+        git clone https://github.com/BankkRoll/repo2pdf
+        ```
+      </Step>
+
+      <Step title="Navigate to the directory">
+        ```bash
+        cd repo2pdf
+        ```
+      </Step>
+
+      <Step title="Install dependencies">
+        ```bash
+        npm install
+        ```
+      </Step>
+
+      <Step title="Build the project">
+        ```bash
+        npm run build
+        ```
+        
+        This compiles the TypeScript source code to JavaScript in the `dist` folder.
+      </Step>
+
+      <Step title="Run the tool">
+        ```bash
+        npm start
+        ```
+        
+        You can also run the compiled version directly:
+        
+        ```bash
+        node dist/clone.js
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Global installation">
+    Install repo2pdf globally to use it as a system command.
+
+    <Steps>
+      <Step title="Install globally">
+        ```bash
+        npm install -g repo2pdf
+        ```
+      </Step>
+
+      <Step title="Run from anywhere">
+        ```bash
+        repo2pdf
+        ```
+      </Step>
+    </Steps>
+
+    <Tip>
+      Global installation allows you to run `repo2pdf` from any directory without the `npx` prefix
+    </Tip>
+  </Tab>
+</Tabs>
+
+## Verify installation
+
+To verify that repo2pdf is working correctly, run it with NPX:
+
+```bash
+npx repo2pdf
+```
+
+You should see the repo2pdf welcome banner:
+
+```
+██████╗ ███████╗██████╗  ██████╗         ██████╗         ██████╗ ██████╗ ███████╗
+██╔══██╗██╔════╝██╔══██╗██╔═══██╗        ╚════██╗        ██╔══██╗██╔══██╗██╔════╝
+██████╔╝█████╗  ██████╔╝██║   ██║         █████╔╝        ██████╔╝██║  ██║█████╗
+██╔══██╗██╔══╝  ██╔═══╝ ██║   ██║        ██╔═══╝         ██╔═══╝ ██║  ██║██╔══╝
+██║  ██║███████╗██║     ╚██████╔╝        ███████╗        ██║     ██████╔╝██║
+╚═╝  ╚═╝╚══════╝╚═╝      ╚═════╝         ╚══════╝        ╚═╝     ╚═════╝ ╚═╝
+
+Welcome to Repo-to-PDF! Let's get started...
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Error: Command not found">
+    If you see "command not found" when running `npx repo2pdf`, ensure:
+    
+    - Node.js and npm are properly installed
+    - Your npm installation is in your system PATH
+    - You have an active internet connection (for NPX to download packages)
+  </Accordion>
+
+  <Accordion title="Error: Failed to install package">
+    This usually indicates a network or permissions issue:
+    
+    ```bash
+    # Try clearing npm cache
+    npm cache clean --force
+    
+    # Then retry
+    npx repo2pdf
+    ```
+    
+    If using global installation, you may need to use sudo on macOS/Linux:
+    
+    ```bash
+    sudo npm install -g repo2pdf
+    ```
+  </Accordion>
+
+  <Accordion title="Error: Node version too old">
+    repo2pdf requires Node.js 18 or higher. Update Node.js:
+    
+    - Visit [nodejs.org](https://nodejs.org) to download the latest LTS version
+    - Or use a version manager like nvm:
+      
+      ```bash
+      nvm install 18
+      nvm use 18
+      ```
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Convert your first repository to PDF
+  </Card>
+  <Card
+    title="Configuration"
+    icon="gear"
+    href="/usage/configuration"
+  >
+    Learn about customization options
+  </Card>
+</CardGroup>

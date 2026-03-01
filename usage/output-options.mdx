@@ -1,0 +1,413 @@
+---
+title: "Output Options"
+description: "Understanding single PDF vs one PDF per file output modes"
+---
+
+## Output Modes
+
+repo2pdf supports two distinct output modes:
+
+1. **Single PDF** - Combines all files into one PDF document
+2. **One PDF per File** - Creates a separate PDF for each source file
+
+The output mode is controlled by the "One PDF per file" feature checkbox during configuration.
+
+## Single PDF Mode
+
+By default (when "One PDF per file" is **not** selected), all repository files are combined into a single PDF document.
+
+### How It Works
+
+```typescript
+let doc: typeof PDFDocument | null = null;
+if (!onePdfPerFile) {
+  doc = new PDFDocument({
+    bufferPages: true,
+    autoFirstPage: false,
+  });
+  doc.pipe(fs.createWriteStream(outputFileName));
+  doc.addPage();
+}
+```
+
+The tool creates one PDFKit document instance and appends all files to it sequentially.
+
+### Configuration
+
+When using single PDF mode:
+
+```bash
+? Select the features you want to include:
+  ◯ One PDF per file
+
+? Please provide an output file name: (output.pdf)
+```
+
+**Default filename:** `output.pdf`
+
+### Features Available
+
+All features work in single PDF mode:
+
+- Add line numbers
+- Add highlighting  
+- **Add page numbers** (only available in this mode)
+- Remove comments
+- Remove empty lines
+
+### Page Numbers
+
+Page numbers are only supported in single PDF mode:
+
+```typescript
+if (!onePdfPerFile) {
+  doc.text("", { continued: false }); // ensure text flow is closed
+  const pages = doc.bufferedPageRange();
+  for (let i = 0; i < pages.count; i++) {
+    doc.switchToPage(i);
+    if (addPageNumbers) {
+      const oldBottomMargin = doc.page.margins.bottom;
+      doc.page.margins.bottom = 0;
+      doc.text(
+        `Page: ${i + 1} of ${pages.count}`,
+        0,
+        doc.page.height - oldBottomMargin / 2,
+        { align: "center" }
+      );
+      doc.page.margins.bottom = oldBottomMargin;
+    }
+  }
+  doc.end();
+}
+```
+
+Page numbers appear centered at the bottom in the format:
+
+```
+Page: 1 of 45
+```
+
+### File Separation
+
+Files are separated by newlines within the single PDF:
+
+```typescript
+// fix new line number starting on previous line
+if (!onePdfPerFile && fileCount > 1) doc.text("\n");
+```
+
+### Output Example
+
+```bash
+✔ PDF created with 47 files processed.
+```
+
+Creates: `output.pdf` (or your custom filename)
+
+### Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Complete Documentation" icon="book">
+    Generate a single comprehensive document for reading or sharing
+  </Card>
+  <Card title="Code Review" icon="magnifying-glass">
+    Review an entire codebase in one searchable PDF
+  </Card>
+  <Card title="Archival" icon="box-archive">
+    Archive a snapshot of your repository in one file
+  </Card>
+  <Card title="Printing" icon="print">
+    Print the entire codebase as a physical document
+  </Card>
+</CardGroup>
+
+## One PDF per File Mode
+
+When "One PDF per file" is selected, each source file gets its own dedicated PDF.
+
+### How It Works
+
+```typescript
+if (onePdfPerFile) {
+  doc = new PDFDocument({
+    bufferPages: true,
+    autoFirstPage: false,
+  });
+
+  const pdfFileName = path
+    .join(outputFolderName, fileName.replace(path.sep, "_"))
+    .concat(".pdf");
+
+  await fsPromises.mkdir(path.dirname(pdfFileName), {
+    recursive: true,
+  });
+  doc.pipe(fs.createWriteStream(pdfFileName));
+  doc.addPage();
+}
+```
+
+A new PDFKit document is created for each file, and each PDF is saved separately.
+
+### Configuration
+
+When using one PDF per file mode:
+
+```bash
+? Select the features you want to include:
+  ◉ One PDF per file
+
+? Please provide an output folder name: (./output)
+```
+
+**Default folder:** `./output`
+
+### File Naming Convention
+
+PDFs are named using the source file's relative path with path separators replaced by underscores:
+
+```typescript
+const pdfFileName = path
+  .join(outputFolderName, fileName.replace(path.sep, "_"))
+  .concat(".pdf");
+```
+
+<Tabs>
+  <Tab title="Linux/macOS">
+    ```
+    src/index.ts          → ./output/src_index.ts.pdf
+    lib/utils/format.js   → ./output/lib_utils_format.js.pdf
+    README.md             → ./output/README.md.pdf
+    ```
+  </Tab>
+  
+  <Tab title="Windows">
+    ```
+    src\index.ts          → .\output\src_index.ts.pdf
+    lib\utils\format.js   → .\output\lib_utils_format.js.pdf
+    README.md             → .\output\README.md.pdf
+    ```
+  </Tab>
+</Tabs>
+
+### Directory Structure
+
+The output folder is created automatically with all necessary parent directories:
+
+```typescript
+await fsPromises.mkdir(path.dirname(pdfFileName), {
+  recursive: true,
+});
+```
+
+Example output structure:
+
+```
+./output/
+├── src_index.ts.pdf
+├── src_components_Button.tsx.pdf
+├── src_utils_helpers.ts.pdf
+├── tests_unit_helpers.test.ts.pdf
+└── README.md.pdf
+```
+
+### Features Available
+
+Most features work in one PDF per file mode:
+
+- Add line numbers
+- Add highlighting
+- Remove comments
+- Remove empty lines
+- **Page numbers are NOT supported** (each PDF is typically 1-2 pages)
+
+<Warning>
+  Page numbers are automatically disabled in one PDF per file mode since each PDF contains only one source file.
+</Warning>
+
+### Document Finalization
+
+Each PDF is finalized immediately after its file is processed:
+
+```typescript
+if (onePdfPerFile) {
+  doc?.end();
+}
+```
+
+### Output Example
+
+```bash
+✔ PDFs created with 47 files processed.
+```
+
+Creates: 47 individual PDFs in the `./output` folder
+
+### Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Selective Sharing" icon="share-nodes">
+    Share individual files without exposing the entire codebase
+  </Card>
+  <Card title="Modular Review" icon="files">
+    Review files independently without scrolling through one large document
+  </Card>
+  <Card title="Parallel Processing" icon="diagram-project">
+    Distribute files to multiple reviewers
+  </Card>
+  <Card title="Organized Archives" icon="folder-tree">
+    Maintain file structure clarity in the output
+  </Card>
+</CardGroup>
+
+## Comparison
+
+<Tabs>
+  <Tab title="Single PDF">
+    ### Advantages
+    - One file to manage
+    - Supports page numbers
+    - Easy to search across all code
+    - Better for sequential reading
+    - Smaller total file size
+    
+    ### Disadvantages
+    - Large file size for big repositories
+    - Harder to navigate to specific files
+    - Must regenerate entire PDF for updates
+    
+    ### Best For
+    - Complete documentation
+    - Code reviews of entire projects
+    - Archival purposes
+    - Printing
+  </Tab>
+  
+  <Tab title="One PDF per File">
+    ### Advantages
+    - Easy to navigate to specific files
+    - Faster regeneration of individual files
+    - Better for selective sharing
+    - Clearer file organization
+    
+    ### Disadvantages
+    - Many files to manage
+    - No page numbers
+    - Harder to search across all code
+    - Larger total file size
+    
+    ### Best For
+    - Selective file sharing
+    - Modular code reviews
+    - Large repositories
+    - Parallel review workflows
+  </Tab>
+</Tabs>
+
+## Processing Messages
+
+The output message changes based on the mode:
+
+```typescript
+spinner.succeed(
+  chalk.greenBright(
+    `${
+      onePdfPerFile ? "PDFs" : "PDF"
+    } created with ${fileCount} files processed.`,
+  ),
+);
+```
+
+<Tabs>
+  <Tab title="Single PDF">
+    ```bash
+    ✔ PDF created with 47 files processed.
+    ```
+  </Tab>
+  
+  <Tab title="One PDF per File">
+    ```bash
+    ✔ PDFs created with 47 files processed.
+    ```
+  </Tab>
+</Tabs>
+
+## File Count Tracking
+
+The tool tracks the number of files processed regardless of output mode:
+
+```typescript
+if (stat.isFile()) {
+  fileCount++;
+  spinner.text = chalk.blueBright(
+    `Processing files... (${fileCount} processed)`,
+  );
+  // ... process file
+}
+```
+
+This provides real-time feedback during processing:
+
+```bash
+⠹ Processing files... (23 processed)
+```
+
+## Memory Considerations
+
+### Single PDF Mode
+
+Uses buffered pages to allow page number insertion:
+
+```typescript
+doc = new PDFDocument({
+  bufferPages: true,  // Required for page numbers
+  autoFirstPage: false,
+});
+```
+
+This keeps all pages in memory, which can be intensive for large repositories.
+
+### One PDF per File Mode
+
+Each PDF is written and closed immediately:
+
+```typescript
+if (onePdfPerFile) {
+  doc?.end();  // Finalize and flush to disk
+}
+```
+
+This is more memory-efficient for large repositories since only one file is in memory at a time.
+
+<Note>
+  For very large repositories (1000+ files), one PDF per file mode is recommended to avoid memory issues.
+</Note>
+
+## Choosing the Right Mode
+
+Use **Single PDF** when:
+- You need page numbers
+- You want one file to manage
+- The repository is small to medium-sized
+- You need to print or archive the code
+- You want easy cross-file searching
+
+Use **One PDF per File** when:
+- The repository is very large
+- You need to share specific files
+- You want clearer file organization
+- Memory usage is a concern
+- You need parallel review workflows
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="sliders" href="/usage/configuration">
+    Explore all available features and options
+  </Card>
+  <Card title="Basic Usage" icon="rocket" href="/usage/basic-usage">
+    Back to basic usage guide
+  </Card>
+  <Card title="Local Repositories" icon="folder-open" href="/usage/local-repositories">
+    Process local repositories
+  </Card>
+</CardGroup>

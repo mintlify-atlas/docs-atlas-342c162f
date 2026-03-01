@@ -1,0 +1,284 @@
+---
+title: 'CLI API Reference'
+description: 'Complete reference for all repo2pdf CLI commands, flags, and options'
+---
+
+## Overview
+
+repo2pdf is a command-line tool that converts GitHub repositories into formatted PDF documents. This page provides a complete reference for all available commands and options.
+
+## Command
+
+```bash
+repo2pdf
+```
+
+The main command launches an interactive CLI that guides you through the PDF generation process.
+
+### Alternative Execution Methods
+
+<CardGroup cols={2}>
+  <Card title="NPX (Recommended)" icon="bolt">
+    ```bash
+    npx repo2pdf
+    ```
+    Runs the latest version without installation
+  </Card>
+  <Card title="Local Installation" icon="download">
+    ```bash
+    npm install -g repo2pdf
+    repo2pdf
+    ```
+    Install globally for repeated use
+  </Card>
+</CardGroup>
+
+## Interactive Prompts
+
+When you run `repo2pdf`, you'll be guided through an interactive configuration process:
+
+### Repository Source
+
+<ParamField path="localRepo" type="choice" required>
+  Choose between using a local repository or cloning from GitHub.
+  
+  **Choices:**
+  - `No` - Clone from a GitHub URL
+  - `Yes` - Use a local repository path
+</ParamField>
+
+### Local Repository Path
+
+<ParamField path="localRepoPath" type="string">
+  The full filesystem path to your local repository.
+  
+  **When shown:** Only appears if you select "Yes" for local repository
+  
+  **Validation:** Path must exist on your filesystem
+  
+  **Example:** `/home/user/projects/my-repo`
+</ParamField>
+
+### GitHub Repository URL
+
+<ParamField path="repoUrl" type="string">
+  The GitHub repository URL to clone and convert.
+  
+  **When shown:** Only appears if you select "No" for local repository
+  
+  **Format:** Must be a valid GitHub URL: `https://github.com/username/repository`
+  
+  **Example:** `https://github.com/BankkRoll/repo2pdf`
+</ParamField>
+
+### Features Selection
+
+<ParamField path="features" type="array" required>
+  Multi-select checkbox for PDF generation features.
+  
+  **Available options:**
+  
+  <Accordion title="Add line numbers">
+    Adds line numbers to the left side of all code in the PDF. The line numbers are automatically padded to align properly based on the total number of lines.
+    
+    **Use case:** Code reviews, teaching, referencing specific lines
+  </Accordion>
+  
+  <Accordion title="Add highlighting">
+    Applies syntax highlighting to code based on file extension. Uses highlight.js to detect and colorize code syntax.
+    
+    **Supported languages:** JavaScript, TypeScript, Python, Java, C++, and 180+ other languages
+  </Accordion>
+  
+  <Accordion title="Add page numbers">
+    Adds page numbers at the bottom center of each page in the format "Page: X of Y".
+    
+    **Note:** Only available when generating a single PDF (not with "One PDF per file")
+  </Accordion>
+  
+  <Accordion title="Remove comments">
+    Strips all comments from code files before adding to the PDF. Uses the `strip-comments` library to remove:
+    - Single-line comments (`//`, `#`, etc.)
+    - Multi-line comments (`/* */`, `""" """`, etc.)
+    
+    **Use case:** Focus on code logic, reduce PDF size
+  </Accordion>
+  
+  <Accordion title="Remove empty lines">
+    Removes blank lines from code files to create more compact output.
+    
+    **Use case:** Reduce PDF page count, maximize code density
+  </Accordion>
+  
+  <Accordion title="One PDF per file">
+    Generates a separate PDF for each file in the repository instead of a single combined PDF.
+    
+    **Output:** Creates a folder with individual PDFs named after each source file
+  </Accordion>
+</ParamField>
+
+### Output File Name
+
+<ParamField path="outputFileName" type="string" default="output.pdf">
+  The name of the generated PDF file.
+  
+  **When shown:** Only when "One PDF per file" is NOT selected
+  
+  **Default:** `output.pdf`
+  
+  **Example:** `my-project-documentation.pdf`
+</ParamField>
+
+### Output Folder Name
+
+<ParamField path="outputFolderName" type="string" default="./output">
+  The folder where individual PDF files will be saved.
+  
+  **When shown:** Only when "One PDF per file" IS selected
+  
+  **Default:** `./output`
+  
+  **Example:** `./project-pdfs`
+</ParamField>
+
+### Keep Cloned Repository
+
+<ParamField path="keepRepo" type="choice">
+  Whether to keep the cloned repository on your filesystem after PDF generation.
+  
+  **When shown:** Only when cloning from GitHub (not for local repositories)
+  
+  **Choices:**
+  - `No` - Delete the cloned repository after PDF generation
+  - `Yes` - Keep the repository in `./tempRepo` directory
+  
+  **Default:** `No`
+</ParamField>
+
+## Configuration File
+
+### repo2pdf.ignore
+
+Create a `repo2pdf.ignore` file in the root of your repository to customize which files and directories are excluded from the PDF.
+
+**File format:** JSON
+
+**Example:**
+
+```json
+{
+  "ignoredFiles": ["tsconfig.json", "dist", "node_modules"],
+  "ignoredExtensions": [".raw", ".log"]
+}
+```
+
+<ParamField path="ignoredFiles" type="array">
+  Array of file names or directory names to exclude.
+  
+  **Example:** `["package-lock.json", "node_modules", "dist", ".env"]`
+</ParamField>
+
+<ParamField path="ignoredExtensions" type="array">
+  Array of file extensions to exclude (including the dot).
+  
+  **Example:** `[".raw", ".log", ".tmp", ".cache"]`
+</ParamField>
+
+### Default Exclusions
+
+repo2pdf automatically excludes common files and directories:
+
+**Default excluded directories:**
+- `.git`
+- `node_modules`
+- `.next`
+- `dist`
+- `build`
+
+**Default excluded extensions:**
+- Images: `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.ico`
+- Archives: `.zip`, `.tar`, `.gz`
+- Binaries: `.exe`, `.dll`, `.so`, `.dylib`
+- Media: `.mp4`, `.mp3`, `.wav`
+
+## Requirements
+
+<ParamField path="node" type="version" required>
+  **Minimum version:** Node.js 18.0.0 or higher
+  
+  Check your version:
+  ```bash
+  node --version
+  ```
+</ParamField>
+
+<ParamField path="git" type="binary">
+  **Required for:** Cloning repositories from GitHub
+  
+  **Not required for:** Local repositories
+  
+  Check if installed:
+  ```bash
+  git --version
+  ```
+</ParamField>
+
+## Dependencies
+
+repo2pdf uses the following core dependencies:
+
+| Package | Version | Purpose |
+|---------|---------|----------|
+| `pdfkit` | ^0.13.0 | PDF generation |
+| `highlight.js` | ^11.9.0 | Syntax highlighting |
+| `simple-git` | ^3.18.0 | Git operations |
+| `inquirer` | ^9.2.6 | Interactive CLI prompts |
+| `chalk` | ^5.2.0 | Terminal styling |
+| `ora` | ^6.3.1 | Loading spinners |
+| `prettier` | ^3.0.3 | Code formatting |
+| `strip-comments` | ^2.0.1 | Comment removal |
+| `isbinaryfile` | ^5.0.0 | Binary file detection |
+
+## Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | Success |
+| 1 | General error (validation failure, file system error, etc.) |
+
+## Examples
+
+### Basic Usage
+
+```bash
+npx repo2pdf
+```
+
+Then follow the prompts:
+1. Select "No" for local repository
+2. Enter: `https://github.com/username/repo`
+3. Select desired features (e.g., "Add line numbers", "Add highlighting")
+4. Enter output filename: `my-project.pdf`
+5. Select "No" to remove cloned repository
+
+### Local Repository
+
+```bash
+npx repo2pdf
+```
+
+1. Select "Yes" for local repository
+2. Enter path: `/home/user/projects/my-app`
+3. Select features
+4. Enter output filename: `local-project.pdf`
+
+### Multiple PDFs
+
+```bash
+npx repo2pdf
+```
+
+1. Select repository source
+2. Select "One PDF per file" in features
+3. Enter output folder: `./pdfs`
+4. Each file will be saved as a separate PDF in the `./pdfs` directory

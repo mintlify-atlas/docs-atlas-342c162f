@@ -1,0 +1,466 @@
+---
+title: 'Troubleshooting'
+description: 'Common issues and solutions for repo2pdf'
+---
+
+## Common Issues
+
+This page covers the most common issues you might encounter when using repo2pdf and how to resolve them.
+
+## Installation & Dependencies
+
+<Accordion title="I'm getting an error 'Failed to install [package-name]'. What should I do?">
+  This usually indicates a problem with npm or Node.js on your system.
+
+  **Solution:**
+
+  1. First, verify you have Node.js and npm installed:
+     ```bash
+     node --version
+     npm --version
+     ```
+
+  2. Make sure you're using Node.js version 18.0.0 or higher:
+     ```bash
+     node --version
+     # Should show v18.0.0 or higher
+     ```
+
+  3. Try installing the failing package manually:
+     ```bash
+     npm install [package-name]
+     ```
+
+  4. If the issue persists, try clearing npm cache:
+     ```bash
+     npm cache clean --force
+     npm install
+     ```
+
+  5. Check if you have permission issues (especially on Linux/Mac):
+     ```bash
+     sudo npm install -g repo2pdf
+     ```
+</Accordion>
+
+<Accordion title="Error: This package is ESM only">
+  This error occurs when using an older version of Node.js that doesn't fully support ES modules.
+
+  **Solution:**
+
+  Upgrade to Node.js 18.0.0 or higher:
+  ```bash
+  # Check current version
+  node --version
+
+  # Using nvm (recommended)
+  nvm install 18
+  nvm use 18
+
+  # Or download from nodejs.org
+  # https://nodejs.org/
+  ```
+</Accordion>
+
+## Repository Issues
+
+<Accordion title="Error: 'Please enter a valid GitHub repository URL'">
+  This validation error appears when the GitHub URL format is incorrect.
+
+  **Solution:**
+
+  Ensure your URL follows this exact format:
+  ```
+  https://github.com/username/repository
+  ```
+
+  **Valid examples:**
+  - `https://github.com/BankkRoll/repo2pdf`
+  - `https://github.com/microsoft/typescript`
+
+  **Invalid examples:**
+  - `github.com/username/repo` (missing https://)
+  - `https://github.com/username/repo.git` (don't include .git)
+  - `https://github.com/username` (missing repository name)
+</Accordion>
+
+<Accordion title="Error: Failed to clone repository">
+  This can happen for several reasons:
+
+  **Possible causes:**
+  1. Git is not installed on your system
+  2. Repository is private and requires authentication
+  3. Network connectivity issues
+  4. Invalid repository URL
+
+  **Solutions:**
+
+  1. **Check if git is installed:**
+     ```bash
+     git --version
+     ```
+     If not installed, download from [git-scm.com](https://git-scm.com/)
+
+  2. **For private repositories:**
+     - First clone the repository manually:
+       ```bash
+       git clone https://github.com/username/private-repo
+       ```
+     - Then use repo2pdf with the local repository option:
+       ```bash
+       npx repo2pdf
+       # Select "Yes" for local repository
+       # Provide the path to your cloned repo
+       ```
+
+  3. **Check network connectivity:**
+     ```bash
+     ping github.com
+     ```
+
+  4. **Verify the repository exists:**
+     - Open the URL in your browser
+     - Make sure the repository is public
+</Accordion>
+
+<Accordion title="Error: 'Please enter a valid directory path'">
+  This occurs when providing an invalid local repository path.
+
+  **Solution:**
+
+  1. Verify the path exists:
+     ```bash
+     # On Linux/Mac
+     ls -la /path/to/repository
+
+     # On Windows
+     dir C:\path\to\repository
+     ```
+
+  2. Use absolute paths instead of relative paths:
+     - **Good:** `/home/user/projects/my-repo`
+     - **Bad:** `../my-repo`
+
+  3. On Windows, use forward slashes or escaped backslashes:
+     - **Good:** `C:/Users/username/projects/my-repo`
+     - **Good:** `C:\\Users\\username\\projects\\my-repo`
+     - **Bad:** `C:\Users\username\projects\my-repo`
+</Accordion>
+
+## PDF Generation Issues
+
+<Accordion title="Generated PDF is empty or missing files">
+  This usually happens when files are being filtered out by the ignore configuration.
+
+  **Solution:**
+
+  1. **Check default exclusions:**
+     repo2pdf automatically excludes:
+     - Binary files (images, videos, executables)
+     - Common build directories (`node_modules`, `dist`, `.git`)
+     - Package manager files
+
+  2. **Review your `repo2pdf.ignore` file:**
+     If you have a `repo2pdf.ignore` file, check if it's too aggressive:
+     ```json
+     {
+       "ignoredFiles": ["node_modules"],
+       "ignoredExtensions": [".log"]
+     }
+     ```
+
+  3. **Check file types:**
+     Make sure the files you want to include are text-based. Binary files are encoded as base64.
+
+  4. **Look for processing messages:**
+     The CLI shows "Processing files... (X processed)" - if this number is low, files are being filtered.
+</Accordion>
+
+<Accordion title="PDF is too large or takes too long to generate">
+  Large repositories can create very large PDFs.
+
+  **Solutions:**
+
+  1. **Use the ignore configuration:**
+     Create a `repo2pdf.ignore` file to exclude unnecessary directories:
+     ```json
+     {
+       "ignoredFiles": [
+         "node_modules",
+         "dist",
+         "build",
+         ".next",
+         "coverage",
+         "test-results"
+       ],
+       "ignoredExtensions": [
+         ".log",
+         ".map",
+         ".lock"
+       ]
+     }
+     ```
+
+  2. **Enable "Remove comments":**
+     This reduces file size by stripping code comments.
+
+  3. **Enable "Remove empty lines":**
+     This creates more compact output.
+
+  4. **Use "One PDF per file":**
+     Generate separate PDFs instead of one large file:
+     - Easier to manage
+     - Faster generation
+     - Can process specific files individually
+</Accordion>
+
+<Accordion title="Syntax highlighting not working">
+  Some files may not have proper syntax highlighting.
+
+  **Causes and solutions:**
+
+  1. **Unsupported language:**
+     - highlight.js supports 180+ languages
+     - Check if your language is supported at [highlightjs.org](https://highlightjs.org/)
+     - If unsupported, files will be rendered as plain text
+
+  2. **Incorrect file extension:**
+     - Syntax highlighting is based on file extension
+     - Rename files to use standard extensions:
+       - `.js` for JavaScript
+       - `.ts` for TypeScript
+       - `.py` for Python
+
+  3. **"Add highlighting" not selected:**
+     - Make sure you check "Add highlighting" in the features selection
+
+  4. **Malformed code:**
+     - If code has syntax errors, highlighting may fall back to plaintext
+</Accordion>
+
+<Accordion title="Code formatting looks wrong in PDF">
+  This can happen with unusual indentation or special characters.
+
+  **Solutions:**
+
+  1. **Tab vs. spaces:**
+     - repo2pdf converts tabs to 4 spaces
+     - If your code uses different tab width, it may look misaligned
+
+  2. **Use Prettier-compatible files:**
+     - repo2pdf attempts to format code with Prettier before PDF generation
+     - Supported formats: JS, TS, CSS, HTML, JSON, Markdown, and more
+
+  3. **Line breaks:**
+     - repo2pdf normalizes line endings (CRLF → LF)
+     - This shouldn't affect appearance but ensures consistency
+
+  4. **Special characters:**
+     - Some Unicode characters may not render correctly
+     - Consider using ASCII alternatives for documentation
+</Accordion>
+
+## Configuration Issues
+
+<Accordion title="How can I customize the styling of the generated PDF?">
+  PDF styling is controlled by the source code.
+
+  **For advanced customization:**
+
+  1. **Clone the repo2pdf repository:**
+     ```bash
+     git clone https://github.com/BankkRoll/repo2pdf
+     cd repo2pdf
+     npm install
+     ```
+
+  2. **Modify the styling in the source code:**
+
+     **Font size** (`src/clone.ts` around line 232):
+     ```typescript
+     doc
+       .font("Courier")
+       .fontSize(10)  // Change this value
+       .text(`${fileName}\n\nBASE64:\n\n${data}`, { lineGap: 4 });
+     ```
+
+     **Colors** (`src/syntax.ts`):
+     - Modify the color mappings for syntax highlighting
+
+     **Margins and layout** (`src/clone.ts`):
+     - PDFKit uses `PDFDocument` with configurable margins
+
+  3. **Build and run your modified version:**
+     ```bash
+     npm run build
+     npm start
+     ```
+</Accordion>
+
+<Accordion title="How can I modify the ignored files list?">
+  Create a `repo2pdf.ignore` file in the root of your repository.
+
+  **File location:**
+  ```
+  your-repository/
+  ├── src/
+  ├── package.json
+  └── repo2pdf.ignore  ← Create this file
+  ```
+
+  **File format:**
+  ```json
+  {
+    "ignoredFiles": ["tsconfig.json", "dist", ".env"],
+    "ignoredExtensions": [".md", ".log", ".tmp"]
+  }
+  ```
+
+  **Tips:**
+  - Add build directories to speed up processing
+  - Exclude sensitive files like `.env`
+  - Use extensions to filter file types (e.g., `[".test.js"]` to exclude tests)
+</Accordion>
+
+## Feature-Specific Issues
+
+<Accordion title="How can I include line numbers in the generated PDF?">
+  During script execution, you'll see a features selection prompt.
+
+  **Solution:**
+
+  When prompted "Select the features you want to include:", use the arrow keys and spacebar to check:
+  - ☑ Add line numbers
+
+  Line numbers will be:
+  - Left-aligned
+  - Automatically padded for alignment
+  - Reset for each file (when using "One PDF per file")
+</Accordion>
+
+<Accordion title="How can I keep the cloned repository after generating the PDF?">
+  This option appears during the CLI prompts.
+
+  **Solution:**
+
+  When asked "Do you want to keep the cloned repository?", select:
+  - `Yes` - Repository stays in `./tempRepo`
+  - `No` - Repository is automatically deleted after PDF generation
+
+  **Note:** This option only appears when cloning from GitHub, not for local repositories.
+</Accordion>
+
+<Accordion title="How can I generate a PDF for a local repository?">
+  Use the local repository option during the initial prompt.
+
+  **Solution:**
+
+  1. Run repo2pdf:
+     ```bash
+     npx repo2pdf
+     ```
+
+  2. When asked "Do you want to use a local repository?", select:
+     - `Yes`
+
+  3. Provide the full path to your repository:
+     ```
+     /home/user/projects/my-repository
+     ```
+
+  **Benefits:**
+  - Faster (no cloning required)
+  - Works with private repositories
+  - No git installation required
+  - Can test configurations quickly
+</Accordion>
+
+<Accordion title="What types of files are supported for conversion to PDF?">
+  repo2pdf supports all text-based files.
+
+  **Fully supported (with syntax highlighting):**
+  - JavaScript, TypeScript, JSX, TSX
+  - Python, Java, C, C++, C#, Go, Rust
+  - HTML, CSS, SCSS, LESS
+  - JSON, YAML, XML
+  - Markdown, Plain text
+  - Shell scripts, Dockerfile
+  - And 180+ other languages via highlight.js
+
+  **Binary files:**
+  - Images, videos, audio files are detected and encoded as base64
+  - Displayed in the PDF as base64 strings
+  - Generally not useful in PDF form (excluded by default)
+
+  **Excluded by default:**
+  - Common image formats (`.png`, `.jpg`, `.gif`, `.svg`)
+  - Archives (`.zip`, `.tar`, `.gz`)
+  - Executables (`.exe`, `.dll`, `.so`)
+  - Media files (`.mp4`, `.mp3`)
+</Accordion>
+
+## Performance Issues
+
+<Accordion title="Processing is very slow">
+  Large repositories or many files can slow down processing.
+
+  **Solutions:**
+
+  1. **Add more files to ignore list:**
+     Exclude test files, build artifacts, and dependencies
+
+  2. **Disable comment removal:**
+     The `strip-comments` operation can be slow on large files
+
+  3. **Disable Prettier formatting:**
+     Prettier formatting happens automatically but adds processing time
+     - To disable: modify source code in `src/clone.ts`
+
+  4. **Use "One PDF per file":**
+     Can be faster as PDFs are written in parallel
+
+  5. **Use local repository:**
+     Eliminates git clone time
+</Accordion>
+
+## Getting Help
+
+If your issue isn't covered here:
+
+<CardGroup cols={2}>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/BankkRoll/repo2pdf/issues">
+    Search existing issues or create a new one
+  </Card>
+  <Card title="View Source" icon="code" href="https://github.com/BankkRoll/repo2pdf">
+    Check the source code for implementation details
+  </Card>
+</CardGroup>
+
+## Error Reporting
+
+When reporting an issue, please include:
+
+1. **Environment information:**
+   ```bash
+   node --version
+   npm --version
+   git --version
+   ```
+
+2. **Operating system:**
+   - macOS version
+   - Linux distribution
+   - Windows version
+
+3. **Command and options used:**
+   - Were you using npx or local installation?
+   - What features did you select?
+
+4. **Error messages:**
+   - Copy the complete error output
+   - Include any stack traces
+
+5. **Repository details:**
+   - Is it public or private?
+   - Approximate size (number of files)
+   - What file types are in the repo?

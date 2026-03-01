@@ -1,0 +1,578 @@
+---
+title: 'Contributing'
+description: 'How to contribute to the repo2pdf project'
+---
+
+## Welcome Contributors!
+
+Your insights, skills, and valuable time can make a huge difference in the evolution of repo2pdf! We're always excited to see the community helping in shaping this tool to be even more efficient and feature-rich.
+
+Whether you're fixing a bug, adding a feature, or improving documentation, your contributions are welcome and appreciated.
+
+## Ways to Contribute
+
+There are many ways to contribute to repo2pdf:
+
+<CardGroup cols={3}>
+  <Card title="Report Bugs" icon="bug">
+    Found an issue? Let us know!
+  </Card>
+  <Card title="Suggest Features" icon="lightbulb">
+    Have ideas for improvements?
+  </Card>
+  <Card title="Write Code" icon="code">
+    Contribute bug fixes or new features
+  </Card>
+</CardGroup>
+
+## Reporting Bugs
+
+Encountered a hiccup? We're here to help!
+
+### Before Submitting a Bug Report
+
+1. **Check existing issues:** Search [GitHub Issues](https://github.com/BankkRoll/repo2pdf/issues) to see if the bug has already been reported
+2. **Try the latest version:** Make sure you're using the most recent version of repo2pdf:
+   ```bash
+   npx repo2pdf@latest
+   ```
+3. **Review the troubleshooting guide:** Check the [Troubleshooting](/advanced/troubleshooting) page for common issues
+
+### Submitting a Bug Report
+
+When opening an issue on GitHub, please include:
+
+<Steps>
+  <Step title="Describe the bug">
+    Provide a clear and concise description of what the bug is.
+    
+    **Example:** "PDF generation fails when repository contains files with emoji in filenames"
+  </Step>
+  
+  <Step title="Steps to reproduce">
+    Detail the exact steps to reproduce the issue:
+    
+    1. Run `npx repo2pdf`
+    2. Enter repository URL: `https://github.com/example/repo`
+    3. Select features: Line numbers, Highlighting
+    4. Click generate
+    5. Observe error
+  </Step>
+  
+  <Step title="Expected behavior">
+    Describe what you expected to happen.
+    
+    **Example:** "PDF should be generated successfully"
+  </Step>
+  
+  <Step title="Actual behavior">
+    Describe what actually happened. Include error messages and stack traces.
+    
+    ```bash
+    Error: ENOENT: no such file or directory
+    at Object.openSync (node:fs:585:3)
+    ```
+  </Step>
+  
+  <Step title="Environment information">
+    Provide details about your environment:
+    
+    - **Operating System:** macOS 13.0, Ubuntu 22.04, Windows 11, etc.
+    - **Node.js version:** Run `node --version`
+    - **npm version:** Run `npm --version`
+    - **Git version:** Run `git --version`
+    - **repo2pdf version:** Check with `npm list -g repo2pdf`
+  </Step>
+  
+  <Step title="Repository details (if applicable)">
+    If the issue is with a specific repository:
+    
+    - Repository URL (if public)
+    - Approximate size (number of files)
+    - File types in the repository
+    - Any special characters in filenames
+  </Step>
+</Steps>
+
+### Bug Report Template
+
+```markdown
+**Describe the bug**
+A clear and concise description of what the bug is.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Run '...'
+2. Enter '...'
+3. Select '...'
+4. See error
+
+**Expected behavior**
+What you expected to happen.
+
+**Actual behavior**
+What actually happened. Include error messages:
+```
+Error message here
+```
+
+**Environment:**
+- OS: [e.g. macOS 13.0]
+- Node.js: [e.g. v18.12.0]
+- npm: [e.g. 9.0.0]
+- Git: [e.g. 2.39.0]
+
+**Additional context**
+Any other context about the problem.
+```
+
+## Suggesting Enhancements
+
+Have a brilliant idea for a new feature or an improvement to an existing one? We're all ears!
+
+### Before Submitting an Enhancement
+
+1. **Check existing issues:** Search for similar feature requests
+2. **Review the roadmap:** Check if the feature is already planned
+3. **Consider the scope:** Make sure the feature aligns with repo2pdf's core purpose
+
+### Submitting a Feature Request
+
+When opening an issue on GitHub, please:
+
+<Steps>
+  <Step title="Describe the feature">
+    Provide a clear and concise description of the feature.
+    
+    **Example:** "Add support for exporting to multiple formats (DOCX, HTML)"
+  </Step>
+  
+  <Step title="Explain the motivation">
+    Why would this feature be useful? What problem does it solve?
+    
+    **Example:** "Users often need to edit the generated documentation in Word or publish it as HTML. Currently they must manually convert the PDF."
+  </Step>
+  
+  <Step title="Describe the solution">
+    How would you like this feature to work?
+    
+    **Example:** "Add a 'Output format' selection in the CLI with options: PDF, DOCX, HTML, Markdown"
+  </Step>
+  
+  <Step title="Alternatives considered">
+    Have you considered any alternative solutions or workarounds?
+    
+    **Example:** "Users could use external PDF converters, but this adds an extra step"
+  </Step>
+  
+  <Step title="Additional context">
+    Add any other context, mockups, or examples.
+  </Step>
+</Steps>
+
+### Enhancement Template
+
+```markdown
+**Is your feature request related to a problem?**
+A clear description of the problem. E.g. "I'm always frustrated when [...]"
+
+**Describe the solution you'd like**
+A clear description of what you want to happen.
+
+**Describe alternatives you've considered**
+Other solutions or features you've considered.
+
+**Additional context**
+Any other context or screenshots about the feature request.
+
+**Benefits to the project**
+Explain why this would be valuable to other users.
+```
+
+## Writing Code
+
+Ready to contribute code? Here's how to get started:
+
+### Getting Started
+
+<Steps>
+  <Step title="Fork the repository">
+    Click the "Fork" button on the [repo2pdf GitHub page](https://github.com/BankkRoll/repo2pdf)
+  </Step>
+  
+  <Step title="Clone your fork">
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/repo2pdf
+    cd repo2pdf
+    ```
+  </Step>
+  
+  <Step title="Install dependencies">
+    ```bash
+    npm install
+    ```
+  </Step>
+  
+  <Step title="Create a branch">
+    Create a new branch for your changes:
+    ```bash
+    git checkout -b feature/my-new-feature
+    ```
+    
+    Branch naming conventions:
+    - `feature/` - New features
+    - `fix/` - Bug fixes
+    - `docs/` - Documentation changes
+    - `refactor/` - Code refactoring
+    - `test/` - Adding tests
+  </Step>
+  
+  <Step title="Make your changes">
+    Edit the code in your branch. Key files:
+    
+    - `src/clone.ts` - Main PDF generation logic
+    - `src/configHandler.ts` - CLI prompts and configuration
+    - `src/syntax.ts` - Syntax highlighting and formatting
+    - `src/loadIgnoreConfig.ts` - File ignore configuration
+    - `src/universalExcludes.ts` - Default exclusion lists
+  </Step>
+  
+  <Step title="Test your changes">
+    Build and run the project:
+    ```bash
+    npm run build
+    npm start
+    ```
+    
+    Test with various repositories and configurations to ensure your changes work correctly.
+  </Step>
+  
+  <Step title="Format your code">
+    repo2pdf uses Prettier for code formatting:
+    ```bash
+    npm run format
+    ```
+  </Step>
+  
+  <Step title="Commit your changes">
+    ```bash
+    git add .
+    git commit -m "feat: add support for custom fonts"
+    ```
+    
+    Use conventional commit messages:
+    - `feat:` - New feature
+    - `fix:` - Bug fix
+    - `docs:` - Documentation changes
+    - `style:` - Code style changes (formatting, etc.)
+    - `refactor:` - Code refactoring
+    - `test:` - Adding tests
+    - `chore:` - Maintenance tasks
+  </Step>
+  
+  <Step title="Push to your fork">
+    ```bash
+    git push origin feature/my-new-feature
+    ```
+  </Step>
+  
+  <Step title="Create a pull request">
+    1. Go to your fork on GitHub
+    2. Click "Pull Request"
+    3. Select your branch
+    4. Fill out the PR template (see below)
+    5. Submit the pull request
+  </Step>
+</Steps>
+
+### Pull Request Guidelines
+
+When submitting a pull request, please:
+
+<Accordion title="Provide a clear description">
+  Explain what your PR does and why. Include:
+  
+  - **Summary:** Brief overview of changes
+  - **Motivation:** Why is this change needed?
+  - **Changes:** List of specific changes made
+  - **Testing:** How you tested the changes
+  
+  **Example:**
+  ```markdown
+  ## Summary
+  Adds support for custom font selection in PDF generation
+  
+  ## Motivation
+  Users have requested the ability to use different fonts for better readability
+  and to match their organization's style guidelines.
+  
+  ## Changes
+  - Added `fontFamily` option to configuration
+  - Updated PDF generation to use selected font
+  - Added validation for font names
+  - Updated documentation
+  
+  ## Testing
+  - Tested with Arial, Courier, and Times-Roman fonts
+  - Verified PDF generation with various repositories
+  - Confirmed backward compatibility (defaults to Courier)
+  ```
+</Accordion>
+
+<Accordion title="Keep changes focused">
+  - One PR should address one issue or feature
+  - Avoid mixing unrelated changes
+  - If you have multiple improvements, create separate PRs
+  
+  **Good:** PR adds syntax highlighting for a new language
+  
+  **Bad:** PR adds syntax highlighting, fixes a bug, and updates documentation for an unrelated feature
+</Accordion>
+
+<Accordion title="Follow coding conventions">
+  Maintain consistency with the existing codebase:
+  
+  - Use TypeScript for all new code
+  - Follow the existing code style
+  - Run `npm run format` before committing
+  - Add type definitions for new functions
+  - Use meaningful variable and function names
+  
+  **Example of good code:**
+  ```typescript
+  async function generatePdfWithOptions(
+    repoPath: string,
+    options: PdfGenerationOptions
+  ): Promise<void> {
+    // Implementation
+  }
+  ```
+</Accordion>
+
+<Accordion title="Update documentation">
+  If your PR changes behavior, update the relevant documentation:
+  
+  - Update README.md if needed
+  - Add JSDoc comments for new functions
+  - Update type definitions
+  - Add examples for new features
+</Accordion>
+
+<Accordion title="Add tests (if applicable)">
+  While repo2pdf doesn't currently have a comprehensive test suite, consider:
+  
+  - Testing your changes manually with various repositories
+  - Documenting test cases in the PR description
+  - Suggesting test scenarios for reviewers
+</Accordion>
+
+<Accordion title="Be responsive to feedback">
+  - Respond to review comments promptly
+  - Be open to suggestions and changes
+  - Update your PR based on feedback
+  - Keep the conversation focused and professional
+</Accordion>
+
+### Development Tips
+
+<Accordion title="Understanding the codebase">
+  **Key files and their purposes:**
+  
+  - **`src/clone.ts`** - Entry point and main PDF generation logic
+    - Handles CLI initialization
+    - Orchestrates PDF creation
+    - Manages file processing
+  
+  - **`src/configHandler.ts`** - Interactive CLI prompts
+    - Defines all user prompts
+    - Handles validation
+    - Passes configuration to main function
+  
+  - **`src/syntax.ts`** - Syntax highlighting
+    - Converts highlight.js output to PDF format
+    - Handles color mapping
+  
+  - **`src/loadIgnoreConfig.ts`** - File filtering
+    - Loads `repo2pdf.ignore` configuration
+    - Merges with default exclusions
+  
+  - **`src/universalExcludes.ts`** - Default exclusions
+    - Lists of always-excluded files and extensions
+</Accordion>
+
+<Accordion title="Working with PDFKit">
+  repo2pdf uses PDFKit for PDF generation:
+  
+  ```typescript
+  // Create a new PDF
+  const doc = new PDFDocument({
+    bufferPages: true,
+    autoFirstPage: false,
+  });
+  
+  // Add content
+  doc.addPage();
+  doc.fontSize(10)
+     .font('Courier')
+     .text('Hello, world!', { lineGap: 4 });
+  
+  // Finalize
+  doc.end();
+  ```
+  
+  [PDFKit documentation](https://pdfkit.org/)
+</Accordion>
+
+<Accordion title="Working with highlight.js">
+  Syntax highlighting uses highlight.js:
+  
+  ```typescript
+  import hljs from 'highlight.js';
+  
+  // Highlight code
+  const highlighted = hljs.highlight(code, {
+    language: 'javascript'
+  });
+  
+  // Result contains HTML with color classes
+  console.log(highlighted.value);
+  ```
+  
+  [highlight.js documentation](https://highlightjs.readthedocs.io/)
+</Accordion>
+
+<Accordion title="Debugging">
+  Tips for debugging:
+  
+  1. **Use console.log liberally:**
+     ```typescript
+     console.log('Processing file:', filePath);
+     console.log('Current config:', config);
+     ```
+  
+  2. **Test with small repositories first:**
+     - Create a test repo with just a few files
+     - Easier to track down issues
+  
+  3. **Check the temp directory:**
+     - Cloned repos are in `./tempRepo`
+     - Select "Yes" to keep it for inspection
+  
+  4. **Use the TypeScript compiler:**
+     ```bash
+     npm run build
+     # Check for type errors
+     ```
+</Accordion>
+
+## Publishing Releases
+
+<Note>
+  This section is for maintainers with publish access.
+</Note>
+
+The npm publish workflow only runs for semantic version tags (`v*.*.*`) or when manually dispatched.
+
+### Release Process
+
+<Steps>
+  <Step title="Update version">
+    Update the version in `package.json` and `package-lock.json`:
+    
+    ```bash
+    npm version patch  # for bug fixes (2.2.9 -> 2.2.10)
+    npm version minor  # for new features (2.2.9 -> 2.3.0)
+    npm version major  # for breaking changes (2.2.9 -> 3.0.0)
+    ```
+  </Step>
+  
+  <Step title="Commit the version change">
+    ```bash
+    git add package.json package-lock.json
+    git commit -m "chore: bump version to v2.3.0"
+    git push origin main
+    ```
+  </Step>
+  
+  <Step title="Create a git tag">
+    ```bash
+    git tag v2.3.0
+    git push origin v2.3.0
+    ```
+    
+    Pushing the tag automatically triggers the "Publish Package" GitHub Action.
+  </Step>
+  
+  <Step title="Verify the publish">
+    1. Check the [Actions tab](https://github.com/BankkRoll/repo2pdf/actions) on GitHub
+    2. Ensure the build succeeds
+    3. Verify the new version on [npm](https://www.npmjs.com/package/repo2pdf)
+  </Step>
+</Steps>
+
+<Warning>
+  Tags are required—pushing to `main` alone will not publish a new version.
+</Warning>
+
+### Re-running a Failed Publish
+
+If the publish step needs to be re-run:
+
+1. Go to the **Actions** tab on GitHub
+2. Select **Publish Package**
+3. Click **Run workflow**
+4. Enter the tag name (e.g., `v2.3.0`) as the `release_tag` input
+5. Click **Run workflow**
+
+## Meet Our Contributors
+
+We're ever grateful for the valuable contributions from our community. Meet the people who are helping shape repo2pdf:
+
+[![Contributors](https://contrib.rocks/image?repo=BankkRoll/repo2pdf)](https://github.com/BankkRoll/repo2pdf/graphs/contributors)
+
+## Code of Conduct
+
+### Our Pledge
+
+We are committed to providing a welcoming and inspiring community for all. We pledge to make participation in our project a harassment-free experience for everyone, regardless of:
+
+- Age, body size, disability, ethnicity
+- Gender identity and expression
+- Level of experience, education, socio-economic status
+- Nationality, personal appearance, race, religion
+- Sexual identity and orientation
+
+### Our Standards
+
+Examples of behavior that contributes to a positive environment:
+
+- Using welcoming and inclusive language
+- Being respectful of differing viewpoints and experiences
+- Gracefully accepting constructive criticism
+- Focusing on what is best for the community
+- Showing empathy towards other community members
+
+### Enforcement
+
+Instances of unacceptable behavior may be reported by contacting the project team through GitHub issues or direct messages to maintainers.
+
+## License
+
+By contributing to repo2pdf, you agree that your contributions will be licensed under the MIT License.
+
+See the [LICENSE](https://github.com/BankkRoll/repo2pdf/blob/main/LICENSE.md) file for details.
+
+## Questions?
+
+If you have questions about contributing:
+
+<CardGroup cols={2}>
+  <Card title="GitHub Discussions" icon="comments" href="https://github.com/BankkRoll/repo2pdf/discussions">
+    Ask questions and discuss ideas
+  </Card>
+  <Card title="GitHub Issues" icon="circle-question" href="https://github.com/BankkRoll/repo2pdf/issues">
+    Report bugs or request features
+  </Card>
+</CardGroup>
+
+Thank you for contributing to repo2pdf! 🎉

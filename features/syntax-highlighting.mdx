@@ -1,0 +1,218 @@
+---
+title: 'Syntax Highlighting'
+description: 'Add colorful syntax highlighting to your PDF code documentation using highlight.js'
+icon: 'palette'
+---
+
+## Overview
+
+repo2pdf uses [highlight.js](https://highlightjs.org/) to automatically detect and highlight code syntax in your PDFs. This feature makes code more readable by applying colors to keywords, strings, comments, and other language elements.
+
+## How It Works
+
+When syntax highlighting is enabled, repo2pdf:
+
+1. **Detects the language** based on file extension
+2. **Applies highlight.js** to parse and tokenize the code
+3. **Maps HTML classes** to PDF color values
+4. **Renders colored text** in the final PDF
+
+From `clone.ts:263-276`:
+
+```typescript
+let highlightedCode;
+try {
+  if (addHighlighting && hljs.getLanguage(extension)) {
+    highlightedCode = hljs.highlight(data, {
+      language: extension,
+    }).value;
+  } else {
+    highlightedCode = hljs.highlight(data, {
+      language: "plaintext",
+    }).value;
+  }
+} catch (error) {
+  highlightedCode = hljs.highlight(data, {
+    language: "plaintext",
+  }).value;
+}
+```
+
+## Enabling Syntax Highlighting
+
+When running repo2pdf, you'll be prompted:
+
+```bash
+repo2pdf
+? Would you like to add syntax highlighting? (Y/n)
+```
+
+Select **Yes** to enable this feature.
+
+## Color Mappings
+
+repo2pdf uses a carefully selected color palette optimized for readability in PDF format. The colors are mapped from highlight.js token types to specific hex values.
+
+<Accordion title="Complete Color Reference">
+
+Here are all the syntax element colors used by repo2pdf (from `syntax.ts:8-41`):
+
+| Token Type | Color | Hex Value | Use Case |
+|------------|-------|-----------|----------|
+| comment | SlateGray | `#708090` | Code comments |
+| punctuation | DarkSlateGray | `#2F4F4F` | Brackets, semicolons |
+| tag | Teal | `#008080` | HTML/XML tags |
+| attribute | SeaGreen | `#2E8B57` | HTML attributes |
+| doctag | SeaGreen | `#2E8B57` | Documentation tags |
+| keyword | Navy | `#000080` | Language keywords |
+| meta | SteelBlue | `#4682B4` | Meta information |
+| name | DarkOliveGreen | `#556B2F` | Function/class names |
+| selector-tag | DarkCyan | `#008B8B` | CSS selectors |
+| deletion | DarkRed | `#8B0000` | Deleted code |
+| number | OrangeRed | `#FF4500` | Numeric literals |
+| quote | SlateBlue | `#6A5ACD` | Quoted text |
+| selector-class | DarkSlateBlue | `#483D8B` | CSS class selectors |
+| selector-id | DarkViolet | `#9400D3` | CSS ID selectors |
+| string | DarkGreen | `#006400` | String literals |
+| template-tag | LightSlateGray | `#778899` | Template tags |
+| type | DimGray | `#696969` | Type annotations |
+| section | LightSeaGreen | `#20B2AA` | Section headings |
+| title | MediumPurple | `#9370DB` | Titles |
+| link | BlueViolet | `#8A2BE2` | Links |
+| operator | Brown | `#A52A2A` | Operators (+, -, etc) |
+| regexp | FireBrick | `#B22222` | Regular expressions |
+| selector-attr | CadetBlue | `#5F9EA0` | Attribute selectors |
+| selector-pseudo | Chartreuse | `#7FFF00` | Pseudo selectors |
+| symbol | Crimson | `#DC143C` | Symbols |
+| template-variable | DarkMagenta | `#8B008B` | Template variables |
+| variable | Gold | `#FFD700` | Variables |
+| literal | LimeGreen | `#32CD32` | Literal values |
+| addition | ForestGreen | `#228B22` | Added code |
+| built_in | GreenYellow | `#ADFF2F` | Built-in functions |
+| bullet | LawnGreen | `#7CFC00` | List bullets |
+| code | Gray | `#7F8C8D` | Inline code |
+
+</Accordion>
+
+## Supported Languages
+
+repo2pdf supports all languages recognized by highlight.js, including:
+
+<CardGroup cols={3}>
+  <Card title="JavaScript/TypeScript" icon="js">
+    .js, .jsx, .ts, .tsx
+  </Card>
+  <Card title="Python" icon="python">
+    .py, .pyw
+  </Card>
+  <Card title="Java/Kotlin" icon="java">
+    .java, .kt, .kts
+  </Card>
+  <Card title="C/C++" icon="c">
+    .c, .h, .cpp, .hpp
+  </Card>
+  <Card title="Ruby" icon="gem">
+    .rb, .rake
+  </Card>
+  <Card title="Go" icon="golang">
+    .go
+  </Card>
+  <Card title="Rust" icon="rust">
+    .rs
+  </Card>
+  <Card title="PHP" icon="php">
+    .php
+  </Card>
+  <Card title="Swift" icon="swift">
+    .swift
+  </Card>
+</CardGroup>
+
+<Note>
+If a language is not recognized, repo2pdf will fall back to plaintext rendering without colors.
+</Note>
+
+## HTML to PDF Conversion
+
+The conversion process works by:
+
+1. **Parsing HTML output** from highlight.js
+2. **Extracting class names** (e.g., `hljs-keyword`)
+3. **Looking up colors** from the color map
+4. **Applying colors** to PDF text segments
+
+From `syntax.ts:45-50`:
+
+```typescript
+const getColorFromClasses = (cls?: string) => {
+  if (!cls) return undefined;
+  const m = /\bhljs-([^\s"]+)/.exec(cls);
+  if (!m) return undefined;
+  return colorMap.get(m[1].toLowerCase());
+};
+```
+
+## Example Output
+
+Here's how different code elements appear in the PDF:
+
+<CodeGroup>
+
+```typescript Example TypeScript
+// This comment will be SlateGray
+function greet(name: string): void {
+  // 'function' and 'void' = Navy
+  // 'greet' = DarkOliveGreen
+  // 'name: string' type = DimGray
+  const message = "Hello, " + name; // string = DarkGreen
+  console.log(message); // built_in = GreenYellow
+}
+```
+
+```python Example Python
+# This comment will be SlateGray
+def calculate_sum(numbers: list) -> int:
+    # 'def', 'return' = Navy
+    # 'calculate_sum' = DarkOliveGreen
+    total = 0  # number = OrangeRed
+    for num in numbers:
+        total += num
+    return total
+```
+
+</CodeGroup>
+
+## Tips for Better Highlighting
+
+<Tip>
+**Use standard file extensions**: Ensure your files use standard extensions (.js, .py, .java) for accurate language detection.
+</Tip>
+
+<Tip>
+**Combine with line numbers**: Syntax highlighting works great with line numbers for maximum readability.
+</Tip>
+
+<Warning>
+Very long files with complex syntax may take slightly longer to process due to highlight.js parsing.
+</Warning>
+
+## Disabling Highlighting
+
+If you prefer monochrome output, simply answer **No** when prompted:
+
+```bash
+? Would you like to add syntax highlighting? No
+```
+
+All code will be rendered in black text on white background.
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Line Numbers" icon="list-ol" href="/features/line-numbers">
+    Add line numbers alongside syntax highlighting
+  </Card>
+  <Card title="Code Formatting" icon="wand-magic-sparkles" href="/features/code-formatting">
+    Auto-format code before highlighting with Prettier
+  </Card>
+</CardGroup>

@@ -1,0 +1,452 @@
+---
+title: "Configuration"
+description: "Configure repo2pdf features through interactive prompts and custom exclusions"
+---
+
+## Interactive Configuration
+
+repo2pdf uses an interactive prompt system powered by [Inquirer.js](https://github.com/SBoudrias/Inquirer.js) to guide you through the configuration process. All options are configured at runtime—there's no config file to maintain.
+
+## Available Features
+
+When you run repo2pdf, you'll be presented with a checkbox prompt to select features:
+
+```bash
+? Select the features you want to include: (Press <space> to select, <a> to toggle all, <i> to invert)
+❯ ◯ Add line numbers
+  ◯ Add highlighting
+  ◯ Add page numbers
+  ◯ Remove comments
+  ◯ Remove empty lines
+  ◯ One PDF per file
+```
+
+Use the **spacebar** to select or deselect each feature.
+
+### Add Line Numbers
+
+Adds line numbers to the left side of each line of code in the PDF output.
+
+<Tabs>
+  <Tab title="Without Line Numbers">
+    ```typescript
+    function greet(name: string) {
+      console.log(`Hello, ${name}!`);
+    }
+    ```
+  </Tab>
+  
+  <Tab title="With Line Numbers">
+    ```typescript
+     1 function greet(name: string) {
+     2   console.log(`Hello, ${name}!`);
+     3 }
+    ```
+  </Tab>
+</Tabs>
+
+**Implementation Details:**
+
+The line numbers are automatically padded to align properly based on the total number of lines:
+
+```typescript
+const lineNumWidth = hlData
+  .filter((d) => d.text === "\n")
+  .length.toString().length;
+
+// Later in the code:
+doc.text(
+  String(lineNum++).padStart(lineNumWidth, " ") + " ",
+  { continued: true, textIndent: 0 }
+);
+```
+
+### Add Highlighting
+
+Applies syntax highlighting to code using [highlight.js](https://highlightjs.org/). The tool automatically detects the language based on file extensions.
+
+**Supported Languages:**
+
+Highlight.js supports 190+ languages. The tool attempts to detect the language from the file extension:
+
+```typescript
+if (addHighlighting && hljs.getLanguage(extension)) {
+  highlightedCode = hljs.highlight(data, {
+    language: extension,
+  }).value;
+} else {
+  highlightedCode = hljs.highlight(data, {
+    language: "plaintext",
+  }).value;
+}
+```
+
+If the language can't be detected, it falls back to plaintext rendering.
+
+<Note>
+  Syntax highlighting adds color to different code elements like keywords, strings, comments, and functions, making the PDF more readable.
+</Note>
+
+### Add Page Numbers
+
+Adds page numbers in the format "Page: X of Y" centered at the bottom of each page.
+
+```typescript
+if (addPageNumbers) {
+  const oldBottomMargin = doc.page.margins.bottom;
+  doc.page.margins.bottom = 0;
+  doc.text(
+    `Page: ${i + 1} of ${pages.count}`,
+    0,
+    doc.page.height - oldBottomMargin / 2,
+    { align: "center" }
+  );
+  doc.page.margins.bottom = oldBottomMargin;
+}
+```
+
+<Warning>
+  Page numbers are only added when using the single PDF output mode. They are not included when using "One PDF per file" mode.
+</Warning>
+
+### Remove Comments
+
+Strips comments from source code using the [strip-comments](https://github.com/jonschlinkert/strip-comments) library.
+
+```typescript
+if (removeComments) {
+  data = strip(data);
+}
+```
+
+This removes:
+- Single-line comments (`//`, `#`, etc.)
+- Multi-line comments (`/* */`, `<!-- -->`, etc.)
+- Docstring comments
+
+<Tabs>
+  <Tab title="With Comments">
+    ```javascript
+    // This is a helper function
+    function add(a, b) {
+      /* Add two numbers */
+      return a + b;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Without Comments">
+    ```javascript
+    function add(a, b) {
+      return a + b;
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Remove Empty Lines
+
+Removes blank lines from the output to create more compact PDFs.
+
+```typescript
+if (removeEmptyLines) {
+  data = data.replace(/^\s*[\r\n]/gm, "");
+}
+```
+
+<Note>
+  This feature is useful for reducing PDF size and page count, especially for codebases with heavy whitespace formatting.
+</Note>
+
+### One PDF per File
+
+Generates a separate PDF for each file instead of combining everything into a single PDF.
+
+When this option is selected:
+- You'll be prompted for an **output folder name** instead of a file name
+- Each file gets its own PDF named after its path
+- The default folder is `./output`
+
+```bash
+? Please provide an output folder name: (./output)
+```
+
+**File Naming Convention:**
+
+PDFs are named using the file's relative path with path separators replaced by underscores:
+
+```typescript
+const pdfFileName = path
+  .join(outputFolderName, fileName.replace(path.sep, "_"))
+  .concat(".pdf");
+```
+
+Example:
+```
+src/components/Button.tsx → ./output/src_components_Button.tsx.pdf
+README.md → ./output/README.md.pdf
+```
+
+See [Output Options](/usage/output-options) for more details.
+
+## Output Configuration
+
+The output configuration depends on whether you select "One PDF per file":
+
+<Tabs>
+  <Tab title="Single PDF">
+    You'll be prompted for a filename:
+    
+    ```bash
+    ? Please provide an output file name: (output.pdf)
+    ```
+    
+    **Default:** `output.pdf`
+    
+    This creates one PDF containing all files in the repository.
+  </Tab>
+  
+  <Tab title="Multiple PDFs">
+    You'll be prompted for a folder name:
+    
+    ```bash
+    ? Please provide an output folder name: (./output)
+    ```
+    
+    **Default:** `./output`
+    
+    This creates a folder containing individual PDFs for each file.
+  </Tab>
+</Tabs>
+
+## Custom Exclusions
+
+You can customize which files and extensions to exclude by creating a `repo2pdf.ignore` file in the root of your repository.
+
+### File Format
+
+The `repo2pdf.ignore` file uses JSON format:
+
+```json
+{
+  "ignoredFiles": [
+    "secrets.txt",
+    ".env",
+    "config.local.js"
+  ],
+  "ignoredExtensions": [
+    ".log",
+    ".tmp",
+    ".cache"
+  ]
+}
+```
+
+### How It Works
+
+The tool loads the ignore configuration using:
+
+```typescript
+export interface IgnoreConfig {
+  ignoredFiles: string[];
+  ignoredExtensions: string[];
+}
+
+export default async function loadIgnoreConfig(
+  rootDir: string,
+): Promise<IgnoreConfig | null> {
+  const ignoreConfigPath = path.join(rootDir, "repo2pdf.ignore");
+
+  try {
+    const data = await fs.promises.readFile(ignoreConfigPath, "utf8");
+    const config = JSON.parse(data) as IgnoreConfig;
+    return config;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      return null; // File doesn't exist, use defaults
+    }
+    throw err;
+  }
+}
+```
+
+Custom exclusions are **merged** with the universal exclusions:
+
+```typescript
+const excludedNames = universalExcludedNames;
+const excludedExtensions = universalExcludedExtensions;
+
+if (ignoreConfig?.ignoredFiles)
+  excludedNames.push(...ignoreConfig.ignoredFiles);
+if (ignoreConfig?.ignoredExtensions)
+  excludedExtensions.push(...ignoreConfig.ignoredExtensions);
+```
+
+### Universal Exclusions
+
+These files and extensions are **always** excluded:
+
+**Files/Directories:**
+```typescript
+const universalExcludedNames = [
+  ".gitignore",
+  ".gitmodules",
+  "package-lock.json",
+  "yarn.lock",
+  ".git",
+  "repo2pdf.ignore",
+  ".vscode",
+  ".idea",
+  ".vs",
+  "node_modules",
+];
+```
+
+**Extensions:**
+```typescript
+const universalExcludedExtensions = [
+  ".png", ".jpg", ".jpeg", ".gif", ".svg", ".bmp", ".webp", ".ico",
+  ".mp4", ".mov", ".avi", ".wmv",
+  ".yml",
+  ".pdf",
+];
+```
+
+<Warning>
+  The `repo2pdf.ignore` file itself is always excluded from the PDF output.
+</Warning>
+
+### Example Use Cases
+
+<Tabs>
+  <Tab title="Exclude Sensitive Files">
+    ```json
+    {
+      "ignoredFiles": [
+        ".env",
+        ".env.local",
+        "credentials.json",
+        "secrets.yaml"
+      ],
+      "ignoredExtensions": []
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Exclude Build Artifacts">
+    ```json
+    {
+      "ignoredFiles": [
+        "dist",
+        "build",
+        ".next",
+        "out"
+      ],
+      "ignoredExtensions": [
+        ".map",
+        ".min.js",
+        ".min.css"
+      ]
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Exclude Test Files">
+    ```json
+    {
+      "ignoredFiles": [
+        "__tests__",
+        "__mocks__",
+        "coverage"
+      ],
+      "ignoredExtensions": [
+        ".test.js",
+        ".spec.ts",
+        ".test.tsx"
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Code Formatting
+
+repo2pdf automatically formats code using [Prettier](https://prettier.io/) when a supported parser is available.
+
+### Supported File Types
+
+```typescript
+const parserOptions: { [key: string]: string } = {
+  js: "babel", jsx: "babel", ts: "typescript", tsx: "typescript",
+  css: "css", scss: "scss", less: "less",
+  html: "html", json: "json", md: "markdown",
+  yaml: "yaml", graphql: "graphql",
+  vue: "vue", angular: "angular", xml: "xml",
+  java: "java", kotlin: "kotlin", swift: "swift",
+  php: "php", ruby: "ruby", python: "python",
+  perl: "perl", shell: "sh", dockerfile: "dockerfile", ini: "ini",
+};
+```
+
+If Prettier formatting fails, the tool falls back to plain text:
+
+```typescript
+if (parser) {
+  try {
+    data = await prettier.format(data, { parser });
+  } catch (error: unknown) {
+    const errorMessage = (error as Error).message.split("\n")[0];
+    console.warn(
+      `Plain text fallback at ${filePath}: ${errorMessage}`,
+    );
+  }
+}
+```
+
+## Repository Cleanup
+
+For remote repositories, you can choose whether to keep the cloned repository:
+
+```bash
+? Do you want to keep the cloned repository? (Use arrow keys)
+❯ No
+  Yes
+```
+
+<Tabs>
+  <Tab title="No (Default)">
+    The `tempRepo` directory is automatically deleted after a 3-second delay:
+    
+    ```typescript
+    if (!keepRepo && !useLocalRepo) {
+      await delay(3000);
+      fs.rmSync(tempDir, { recursive: true, force: true });
+      spinner.succeed(
+        chalk.greenBright("Temporary repository has been deleted.")
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Yes">
+    The repository remains in the `tempRepo` directory for inspection or reuse.
+  </Tab>
+</Tabs>
+
+<Note>
+  This option only appears when converting remote repositories. Local repositories are never deleted.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Output Options" icon="file-pdf" href="/usage/output-options">
+    Learn about single vs multiple PDF output modes
+  </Card>
+  <Card title="Basic Usage" icon="rocket" href="/usage/basic-usage">
+    Back to basic usage guide
+  </Card>
+  <Card title="Local Repositories" icon="folder-open" href="/usage/local-repositories">
+    Process local repositories
+  </Card>
+</CardGroup>

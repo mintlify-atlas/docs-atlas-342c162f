@@ -1,0 +1,477 @@
+---
+title: 'Ignore Patterns'
+description: 'Exclude files and directories from your PDF using repo2pdf.ignore'
+icon: 'ban'
+---
+
+## Overview
+
+repo2pdf allows you to exclude specific files, directories, and file types from your generated PDF using a `repo2pdf.ignore` configuration file. This is essential for keeping your PDFs focused and avoiding unnecessary content.
+
+## Quick Start
+
+Create a `repo2pdf.ignore` file in your repository root:
+
+```json repo2pdf.ignore
+{
+  "ignoredFiles": ["tsconfig.json", "dist", "node_modules"],
+  "ignoredExtensions": [".raw"]
+}
+```
+
+Then run repo2pdf as normal - the ignore patterns will be automatically detected and applied.
+
+## Configuration Format
+
+The `repo2pdf.ignore` file is a JSON file with two arrays:
+
+<ParamField path="ignoredFiles" type="string[]" required>
+  Array of file names and directory names to exclude
+</ParamField>
+
+<ParamField path="ignoredExtensions" type="string[]" required>
+  Array of file extensions to exclude (include the dot)
+</ParamField>
+
+<CodeGroup>
+
+```json Basic Example
+{
+  "ignoredFiles": ["package-lock.json", "dist"],
+  "ignoredExtensions": [".map", ".log"]
+}
+```
+
+```json Comprehensive Example
+{
+  "ignoredFiles": [
+    "tsconfig.json",
+    "package-lock.json",
+    "yarn.lock",
+    "dist",
+    "build",
+    "coverage",
+    "node_modules",
+    ".env",
+    ".env.local"
+  ],
+  "ignoredExtensions": [
+    ".map",
+    ".log",
+    ".lock",
+    ".raw",
+    ".tmp"
+  ]
+}
+```
+
+</CodeGroup>
+
+## How It Works
+
+The ignore system works in multiple layers:
+
+### 1. Universal Excludes (Always Applied)
+
+repo2pdf has built-in exclusions that are **always applied**:
+
+From `universalExcludes.ts:1-31`:
+
+```typescript
+const universalExcludedNames = [
+  ".gitignore",
+  ".gitmodules",
+  "package-lock.json",
+  "yarn.lock",
+  ".git",
+  "repo2pdf.ignore",
+  ".vscode",
+  ".idea",
+  ".vs",
+  "node_modules",
+];
+
+const universalExcludedExtensions = [
+  ".png",
+  ".yml",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".svg",
+  ".bmp",
+  ".webp",
+  ".ico",
+  ".mp4",
+  ".mov",
+  ".avi",
+  ".wmv",
+  ".pdf",
+];
+```
+
+<Note>
+These exclusions cannot be overridden. They are applied to every repo2pdf run.
+</Note>
+
+### 2. Custom Ignores (From repo2pdf.ignore)
+
+Your custom ignores are **added** to the universal excludes:
+
+From `clone.ts:182-196`:
+
+```typescript
+const excludedNames = universalExcludedNames;
+const excludedExtensions = universalExcludedExtensions;
+
+if (ignoreConfig?.ignoredFiles)
+  excludedNames.push(...ignoreConfig.ignoredFiles);
+if (ignoreConfig?.ignoredExtensions)
+  excludedExtensions.push(...ignoreConfig.ignoredExtensions);
+
+// Check if file or directory should be excluded
+if (
+  excludedNames.includes(path.basename(filePath)) ||
+  excludedExtensions.includes(path.extname(filePath))
+) {
+  continue;
+}
+```
+
+### 3. Loading the Configuration
+
+The `repo2pdf.ignore` file is loaded from the repository root:
+
+From `loadIgnoreConfig.ts:9-24`:
+
+```typescript
+export default async function loadIgnoreConfig(
+  rootDir: string,
+): Promise<IgnoreConfig | null> {
+  const ignoreConfigPath = path.join(rootDir, "repo2pdf.ignore");
+
+  try {
+    const data = await fs.promises.readFile(ignoreConfigPath, "utf8");
+    const config = JSON.parse(data) as IgnoreConfig;
+    return config;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      return null; // File not found - use defaults only
+    }
+    throw err; // Other errors are thrown
+  }
+}
+```
+
+<Tip>
+If `repo2pdf.ignore` is not found, repo2pdf continues with only the universal excludes. This is not an error.
+</Tip>
+
+## Ignore Patterns by Type
+
+<Accordion title="Ignoring Directories">
+
+To ignore an entire directory, add its name to `ignoredFiles`:
+
+```json
+{
+  "ignoredFiles": [
+    "node_modules",
+    "dist",
+    "build",
+    ".next",
+    "out",
+    "coverage"
+  ],
+  "ignoredExtensions": []
+}
+```
+
+The directory name is matched against `path.basename(filePath)`, so:
+- `node_modules` matches `./node_modules/` and `./packages/app/node_modules/`
+- `dist` matches `./dist/` and `./packages/core/dist/`
+
+<Warning>
+Directory matching is based on name only, not full path. All directories with that name will be excluded.
+</Warning>
+
+</Accordion>
+
+<Accordion title="Ignoring Specific Files">
+
+To ignore specific files by name:
+
+```json
+{
+  "ignoredFiles": [
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    ".env",
+    ".env.local",
+    "tsconfig.json",
+    "jest.config.js"
+  ],
+  "ignoredExtensions": []
+}
+```
+
+Like directories, file name matching is exact and applies anywhere in the tree.
+
+</Accordion>
+
+<Accordion title="Ignoring File Extensions">
+
+To ignore all files with specific extensions:
+
+```json
+{
+  "ignoredFiles": [],
+  "ignoredExtensions": [
+    ".map",
+    ".log",
+    ".tmp",
+    ".cache",
+    ".lock",
+    ".raw"
+  ]
+}
+```
+
+<Note>
+Always include the dot in the extension: `".map"`, not `"map"`.
+</Note>
+
+Extensions are matched using `path.extname()`, so:
+- `".map"` matches `bundle.js.map`, `app.css.map`, etc.
+- `".log"` matches `debug.log`, `error.log`, etc.
+
+</Accordion>
+
+<Accordion title="Combining Multiple Patterns">
+
+You can combine files, directories, and extensions:
+
+```json
+{
+  "ignoredFiles": [
+    "node_modules",
+    "dist",
+    "package-lock.json",
+    ".env"
+  ],
+  "ignoredExtensions": [
+    ".map",
+    ".log",
+    ".tmp"
+  ]
+}
+```
+
+All patterns are applied together - a file is excluded if it matches **any** pattern.
+
+</Accordion>
+
+## Common Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Node.js Projects" icon="node-js">
+    ```json
+    {
+      "ignoredFiles": [
+        "node_modules",
+        "dist",
+        "build",
+        "package-lock.json"
+      ],
+      "ignoredExtensions": [".map"]
+    }
+    ```
+  </Card>
+  
+  <Card title="TypeScript Projects" icon="code">
+    ```json
+    {
+      "ignoredFiles": [
+        "dist",
+        "coverage",
+        "tsconfig.json",
+        "tsconfig.build.json"
+      ],
+      "ignoredExtensions": [
+        ".tsbuildinfo"
+      ]
+    }
+    ```
+  </Card>
+  
+  <Card title="Python Projects" icon="python">
+    ```json
+    {
+      "ignoredFiles": [
+        "__pycache__",
+        ".pytest_cache",
+        "venv",
+        ".venv",
+        "*.egg-info"
+      ],
+      "ignoredExtensions": [
+        ".pyc",
+        ".pyo"
+      ]
+    }
+    ```
+  </Card>
+  
+  <Card title="Next.js Projects" icon="react">
+    ```json
+    {
+      "ignoredFiles": [
+        ".next",
+        "out",
+        "node_modules",
+        ".vercel"
+      ],
+      "ignoredExtensions": []
+    }
+    ```
+  </Card>
+</CardGroup>
+
+## Debugging Ignore Patterns
+
+To verify your ignore patterns are working:
+
+1. **Check the file count**: After running repo2pdf, you'll see:
+   ```
+   ✔ PDF created with 42 files processed.
+   ```
+
+2. **Compare with git**: Use `git ls-files` to see what Git tracks
+
+3. **Review the PDF**: Open the generated PDF and verify excluded files aren't present
+
+<Tip>
+The output message shows the number of files processed. If this number is unexpectedly high, your ignore patterns may not be working.
+</Tip>
+
+## File Path Matching
+
+Matching is done on **base name** only:
+
+```typescript
+path.basename(filePath)  // e.g., "package.json" from "/path/to/package.json"
+path.extname(filePath)   // e.g., ".json" from "/path/to/file.json"
+```
+
+This means:
+- You **cannot** use glob patterns like `src/**/*.test.js`
+- You **cannot** use full paths like `/src/test/fixtures`
+- You **can** match any file/directory with that exact name
+- You **can** match any file with that exact extension
+
+<Warning>
+repo2pdf.ignore does not support glob patterns or regex. Only exact name and extension matching.
+</Warning>
+
+## Error Handling
+
+<Steps>
+  <Step title="File Not Found">
+    If `repo2pdf.ignore` doesn't exist:
+    - No error is thrown
+    - Only universal excludes are applied
+    - Processing continues normally
+  </Step>
+  
+  <Step title="Invalid JSON">
+    If the file exists but contains invalid JSON:
+    - An error is thrown
+    - repo2pdf stops execution
+    - You must fix the JSON syntax
+  </Step>
+  
+  <Step title="Missing Fields">
+    If `ignoredFiles` or `ignoredExtensions` is missing:
+    - TypeScript expects both fields
+    - The field is treated as undefined
+    - The check `ignoreConfig?.ignoredFiles` prevents errors
+  </Step>
+</Steps>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Start Minimal" icon="seedling">
+    Begin with a small ignore list and expand as needed
+  </Card>
+  <Card title="Use Comments" icon="comment">
+    JSON doesn't support comments, but you can document in your README
+  </Card>
+  <Card title="Version Control" icon="git">
+    Commit `repo2pdf.ignore` so all team members use the same settings
+  </Card>
+  <Card title="Test Changes" icon="vial">
+    After updating, run repo2pdf and verify the file count changes
+  </Card>
+</CardGroup>
+
+## Example from repo2pdf Source
+
+The repo2pdf repository itself uses this ignore file:
+
+```json repo2pdf.ignore
+{
+  "ignoredFiles": ["tsconfig.json", "dist", "node_modules"],
+  "ignoredExtensions": [".raw"]
+}
+```
+
+This excludes:
+- TypeScript configuration
+- Built JavaScript output
+- Dependencies
+- Raw data files
+
+## Interface Definition
+
+The TypeScript interface ensures type safety:
+
+From `loadIgnoreConfig.ts:4-7`:
+
+```typescript
+export interface IgnoreConfig {
+  ignoredFiles: string[];
+  ignoredExtensions: string[];
+}
+```
+
+## Location Requirements
+
+<Warning>
+The `repo2pdf.ignore` file **must** be in the repository root directory. It cannot be in a subdirectory.
+</Warning>
+
+When cloning:
+```
+git clone https://github.com/user/repo
+# repo2pdf.ignore should be at: ./repo/repo2pdf.ignore
+```
+
+When using local repo:
+```bash
+repo2pdf
+? Use local repository? Yes
+? Path: /path/to/my-project
+# repo2pdf.ignore should be at: /path/to/my-project/repo2pdf.ignore
+```
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Getting Started" icon="rocket" href="/quickstart">
+    Learn how to set up and run repo2pdf
+  </Card>
+  <Card title="CLI Options" icon="terminal" href="/advanced/api-reference">
+    View all available command-line options
+  </Card>
+</CardGroup>
