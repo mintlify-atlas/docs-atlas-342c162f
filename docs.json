@@ -10,12 +10,12 @@
   "navbar": {
     "primary": {
       "type": "github",
-      "href": "https://github.com/BankkRoll/repo2pdf"
+      "href": "https://github.com/BankkRoll/Repo-to-PDF"
     }
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/BankkRoll/repo2pdf"
+      "github": "https://github.com/BankkRoll/Repo-to-PDF"
     }
   },
   "navigation": {
