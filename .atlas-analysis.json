@@ -1,0 +1,66 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "repo2pdf",
+  "projectDescription": "A CLI tool for converting GitHub repositories into well-formatted PDF documents with syntax highlighting and customization options.",
+  "theme": "aspen",
+  "primaryColor": "#DC143C",
+  "lightColor": null,
+  "darkColor": null,
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "installation",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Usage",
+        "pages": [
+          "usage/basic-usage",
+          "usage/local-repositories",
+          "usage/configuration",
+          "usage/output-options"
+        ]
+      },
+      {
+        "group": "Features",
+        "pages": [
+          "features/syntax-highlighting",
+          "features/line-numbers",
+          "features/page-numbers",
+          "features/code-formatting",
+          "features/ignore-patterns"
+        ]
+      },
+      {
+        "group": "Advanced",
+        "pages": [
+          "advanced/api-reference",
+          "advanced/troubleshooting",
+          "advanced/contributing"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Convert GitHub repositories to PDF with one command",
+    "Syntax highlighting for 180+ programming languages",
+    "Customizable output with line numbers, page numbers, and formatting",
+    "Support for both remote and local repositories",
+    "Flexible ignore patterns via repo2pdf.ignore file",
+    "Multiple PDF output modes (single file or one per source file)",
+    "Code formatting with Prettier integration",
+    "Comment and empty line removal options"
+  ],
+  "publicApiSurface": [
+    "npx repo2pdf - Main CLI command",
+    "Clone repository mode - Clone and convert remote GitHub repos",
+    "Local repository mode - Convert local repositories to PDF",
+    "Feature flags: Add line numbers, Add highlighting, Add page numbers, Remove comments, Remove empty lines, One PDF per file",
+    "Configuration file: repo2pdf.ignore (ignoredFiles, ignoredExtensions)",
+    "Output options: Single PDF file or directory of PDFs"
+  ]
+}
